@@ -115,7 +115,7 @@
       box-shadow: var(--shadow);
       overflow:hidden;
       position:relative;
-      min-height: 520px; /* makes them feel “scoreboard big” */
+      min-height: 560px;
     }
 
     /* angular “broadcast” corner marker */
@@ -220,6 +220,13 @@
       letter-spacing:0.35px;
     }
 
+    .progressStack{
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      margin-top: 6px;
+    }
+
     .track{
       height: 14px;
       border-radius: 999px;
@@ -229,7 +236,7 @@
       position:relative;
     }
 
-    /* segmented ticks inside the bar */
+    /* segmented ticks inside the bar (5 milestones => 4 segments, we use 5 slots visually) */
     .track::before{
       content:"";
       position:absolute;
@@ -291,7 +298,7 @@
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-top: 14px;
+      margin-top: 16px;
     }
     @media (max-width: 560px){
       .kpi{ grid-template-columns: 1fr; }
@@ -314,6 +321,7 @@
       font-size: 16px;
       font-weight: 900;
       letter-spacing:0.2px;
+      line-height: 1.15;
     }
 
     .small{
@@ -377,15 +385,7 @@
     return { display, rel };
   }
 
-  // --- Milestones / progress (goal: Emerald IV at 0 LP) ---
-  const MILESTONES = [
-    { tier: "PLATINUM", div: "IV", label: "P4" },
-    { tier: "PLATINUM", div: "III", label: "P3" },
-    { tier: "PLATINUM", div: "II", label: "P2" },
-    { tier: "PLATINUM", div: "I", label: "P1" },
-    { tier: "EMERALD",  div: "IV", label: "E4" }
-  ];
-
+  // --- Rank model ---
   const tierOrder = {
     "IRON": 0, "BRONZE": 1, "SILVER": 2, "GOLD": 3,
     "PLATINUM": 4, "EMERALD": 5, "DIAMOND": 6,
@@ -400,28 +400,77 @@
     return t * 10000 + d * 1000 + L;
   }
 
-  function progressToEmerald(cur){
-    if (!cur) return { pct: 0, reachedIndex: -1, curLabel: "Unranked / placements" };
+  // --- Progress bar definitions (stacked) ---
+  // Each bar is "from X4 @ 0 LP" to "nextTier4 @ 0 LP"
+  // Milestones are the 4 divisions in the destination tier, ending at Tier IV (0 LP).
+  const BARS = [
+    {
+      title: "Progress to Gold",
+      start: { tier: "SILVER", div: "IV", lp: 0 },
+      end:   { tier: "GOLD",   div: "IV", lp: 0 },
+      milestones: [
+        { tier: "SILVER", div:"IV", label:"S4" },
+        { tier: "SILVER", div:"III", label:"S3" },
+        { tier: "SILVER", div:"II", label:"S2" },
+        { tier: "SILVER", div:"I", label:"S1" },
+        { tier: "GOLD",   div:"IV", label:"G4" },
+      ]
+    },
+    {
+      title: "Progress to Platinum",
+      start: { tier: "GOLD",   div: "IV", lp: 0 },
+      end:   { tier: "PLATINUM", div: "IV", lp: 0 },
+      milestones: [
+        { tier: "GOLD", div:"IV", label:"G4" },
+        { tier: "GOLD", div:"III", label:"G3" },
+        { tier: "GOLD", div:"II", label:"G2" },
+        { tier: "GOLD", div:"I", label:"G1" },
+        { tier: "PLATINUM", div:"IV", label:"P4" },
+      ]
+    },
+    {
+      title: "Progress to Emerald",
+      start: { tier: "PLATINUM", div: "IV", lp: 0 },
+      end:   { tier: "EMERALD",  div: "IV", lp: 0 },
+      milestones: [
+        { tier: "PLATINUM", div:"IV", label:"P4" },
+        { tier: "PLATINUM", div:"III", label:"P3" },
+        { tier: "PLATINUM", div:"II", label:"P2" },
+        { tier: "PLATINUM", div:"I", label:"P1" },
+        { tier: "EMERALD",  div:"IV", label:"E4" },
+      ]
+    },
+  ];
+
+  // For a given bar, compute fill:
+  // - if player below bar.start => 0
+  // - if player above/equal bar.end => 1
+  // - else linear between start and end using rankValue
+  function computeBarProgress(cur, bar){
+    if (!cur) return { pct: 0, reachedIndex: -1 };
 
     const curV = rankValue(cur.tier, cur.division, cur.lp);
+    const startV = rankValue(bar.start.tier, bar.start.div, bar.start.lp);
+    const endV   = rankValue(bar.end.tier,   bar.end.div,   bar.end.lp);
 
-    const start = MILESTONES[0];
-    const goal  = MILESTONES[MILESTONES.length - 1];
-
-    const startV = rankValue(start.tier, start.div, 0);
-    const goalV  = rankValue(goal.tier,  goal.div,  0); // Emerald IV at 0 LP
-
-    const raw = (curV - startV) / (goalV - startV);
-    const pct = Math.max(0, Math.min(1, raw));
+    let pct;
+    if (curV < startV) pct = 0;
+    else if (curV >= endV) pct = 1;
+    else pct = (curV - startV) / (endV - startV);
 
     let reachedIndex = -1;
-    for (let i = 0; i < MILESTONES.length; i++){
-      const m = MILESTONES[i];
+    for (let i = 0; i < bar.milestones.length; i++){
+      const m = bar.milestones[i];
       const mv = rankValue(m.tier, m.div, 0);
       if (curV >= mv) reachedIndex = i;
     }
 
-    return { pct, reachedIndex, curLabel: `${cur.tier} ${cur.division} — ${cur.lp} LP` };
+    return { pct: Math.max(0, Math.min(1, pct)), reachedIndex };
+  }
+
+  function curLabel(cur){
+    if (!cur) return "Unranked / placements";
+    return `${cur.tier} ${cur.division} — ${cur.lp} LP`;
   }
 
   async function load(){
@@ -441,12 +490,25 @@
       const winrate = cur && cur.winrate != null ? (cur.winrate * 100).toFixed(1) + "%" : "n/a";
       const peakText = p.peak ? `${p.peak.tier} ${p.peak.division} — ${p.peak.lp} LP` : "n/a";
 
-      const prog = progressToEmerald(cur);
-      const pctLabel = `${Math.round(prog.pct * 100)}%`;
+      const barsHtml = BARS.map((bar) => {
+        const prog = computeBarProgress(cur, bar);
+        const pctLabel = `${Math.round(prog.pct * 100)}%`;
 
-      const milestoneHtml = MILESTONES.map((m, i) => {
-        const cls = (i <= prog.reachedIndex) ? "on" : "";
-        return `<span class="${cls}">${m.label}</span>`;
+        const milestoneHtml = bar.milestones.map((m, i) => {
+          const cls = (i <= prog.reachedIndex) ? "on" : "";
+          return `<span class="${cls}">${m.label}</span>`;
+        }).join("");
+
+        return `
+          <div>
+            <div class="sectionTitle">
+              <div class="t">${bar.title}</div>
+              <div class="pct">${pctLabel}</div>
+            </div>
+            <div class="track"><div class="fill" style="width:${(prog.pct*100).toFixed(2)}%"></div></div>
+            <div class="milestones">${milestoneHtml}</div>
+          </div>
+        `;
       }).join("");
 
       const board = document.createElement("div");
@@ -459,18 +521,15 @@
           </div>
           <div class="rankBox">
             <div class="rankLine">Current</div>
-            <div class="rankBig">${cur ? prog.curLabel : "Unranked / placements"}</div>
+            <div class="rankBig">${curLabel(cur)}</div>
             <div class="rankLine">Peak (since tracking): ${peakText}</div>
           </div>
         </div>
 
         <div class="body">
-          <div class="sectionTitle">
-            <div class="t">Progress to Emerald</div>
-            <div class="pct">${pctLabel}</div>
+          <div class="progressStack">
+            ${barsHtml}
           </div>
-          <div class="track"><div class="fill" style="width:${(prog.pct*100).toFixed(2)}%"></div></div>
-          <div class="milestones">${milestoneHtml}</div>
 
           <div class="kpi">
             <div class="tile">
