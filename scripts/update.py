@@ -359,7 +359,7 @@ def main():
     # If you ever run locally on Windows and it errors, use the fallback noted below.
     state["updatedAt"] = {
         "iso": now_ny.isoformat(),
-        "display": now_ny.strftime("Last Updated: %-I:%M %p on %-m/%-d")
+        "display": now_ny.strftime("Last Updated: %-I:%M%p on %-m/%-d")
     }
 
     save_state(state)
