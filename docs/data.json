@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T04:59:50.799429-05:00",
-    "display": "Last Updated: 4:59AM on 12/30"
+    "iso": "2025-12-30T05:06:54.597558-05:00",
+    "display": "Last Updated: 5:06AM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -262,16 +262,19 @@
         "NA1_5281718224",
         "NA1_5281727620",
         "NA1_5281770714",
-        "NA1_5288530970"
+        "NA1_5288530970",
+        "NA1_5278324619",
+        "NA1_5278338970",
+        "NA1_5278353769"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 112,
+        "splitMatchesProcessed": 115,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 195923,
-        "totalPlaytimeHMS": "54:25:23",
-        "games": 112,
-        "wins": 60,
+        "totalPlaytimeSeconds": 201074,
+        "totalPlaytimeHMS": "55:51:14",
+        "games": 115,
+        "wins": 63,
         "losses": 52,
         "champions": {
           "60": {
@@ -401,10 +404,10 @@
             "playtimeSeconds": 1861
           },
           "106": {
-            "games": 12,
-            "wins": 7,
+            "games": 15,
+            "wins": 10,
             "losses": 5,
-            "playtimeSeconds": 19975
+            "playtimeSeconds": 25126
           }
         },
         "mostPlayedChampionId": "60",
@@ -420,8 +423,8 @@
         }
       },
       "backfill": {
-        "nextStart": 400,
-        "done": false
+        "nextStart": 500,
+        "done": true
       }
     }
   }
