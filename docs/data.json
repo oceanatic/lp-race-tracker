@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T05:30:51.632298-05:00",
-    "display": "Last Updated: 5:30AM on 12/30"
+    "iso": "2025-12-30T05:31:40.182296-05:00",
+    "display": "Last Updated: 5:31AM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -470,17 +470,57 @@
         "NA1_5372987770",
         "NA1_5373007658",
         "NA1_5373026713",
-        "NA1_5373043243"
+        "NA1_5373043243",
+        "NA1_5373059858",
+        "NA1_5373073767",
+        "NA1_5374764905",
+        "NA1_5374832563",
+        "NA1_5374908322",
+        "NA1_5374985524",
+        "NA1_5375052728",
+        "NA1_5375123645",
+        "NA1_5375175289",
+        "NA1_5375213853",
+        "NA1_5376609983",
+        "NA1_5376654731",
+        "NA1_5376702596",
+        "NA1_5376763968",
+        "NA1_5377759965",
+        "NA1_5377828703",
+        "NA1_5377903303",
+        "NA1_5377962146",
+        "NA1_5378008862",
+        "NA1_5378047695",
+        "NA1_5378094685",
+        "NA1_5378131361",
+        "NA1_5380323107",
+        "NA1_5381482419",
+        "NA1_5381541172",
+        "NA1_5381572459",
+        "NA1_5381619748",
+        "NA1_5381657200",
+        "NA1_5383212269",
+        "NA1_5383277492",
+        "NA1_5383322354",
+        "NA1_5383360996",
+        "NA1_5383403856",
+        "NA1_5383436848",
+        "NA1_5385101247",
+        "NA1_5385136848",
+        "NA1_5385164612",
+        "NA1_5385199458",
+        "NA1_5386694598",
+        "NA1_5386735939"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 319,
+        "splitMatchesProcessed": 359,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 567954,
-        "totalPlaytimeHMS": "157:45:54",
-        "games": 319,
-        "wins": 170,
-        "losses": 149,
+        "totalPlaytimeSeconds": 644165,
+        "totalPlaytimeHMS": "178:56:05",
+        "games": 359,
+        "wins": 186,
+        "losses": 173,
         "champions": {
           "60": {
             "games": 25,
@@ -501,10 +541,10 @@
             "playtimeSeconds": 47429
           },
           "113": {
-            "games": 5,
+            "games": 6,
             "wins": 5,
-            "losses": 0,
-            "playtimeSeconds": 7686
+            "losses": 1,
+            "playtimeSeconds": 9335
           },
           "421": {
             "games": 10,
@@ -513,10 +553,10 @@
             "playtimeSeconds": 15780
           },
           "876": {
-            "games": 3,
-            "wins": 2,
-            "losses": 1,
-            "playtimeSeconds": 4756
+            "games": 5,
+            "wins": 3,
+            "losses": 2,
+            "playtimeSeconds": 8333
           },
           "427": {
             "games": 1,
@@ -525,10 +565,10 @@
             "playtimeSeconds": 1260
           },
           "517": {
-            "games": 3,
-            "wins": 1,
-            "losses": 2,
-            "playtimeSeconds": 5936
+            "games": 6,
+            "wins": 2,
+            "losses": 4,
+            "playtimeSeconds": 11158
           },
           "32": {
             "games": 6,
@@ -537,10 +577,10 @@
             "playtimeSeconds": 10361
           },
           "80": {
-            "games": 10,
-            "wins": 4,
+            "games": 11,
+            "wins": 5,
             "losses": 6,
-            "playtimeSeconds": 19247
+            "playtimeSeconds": 21766
           },
           "254": {
             "games": 1,
@@ -585,22 +625,22 @@
             "playtimeSeconds": 1534
           },
           "48": {
-            "games": 2,
+            "games": 3,
             "wins": 1,
-            "losses": 1,
-            "playtimeSeconds": 3367
+            "losses": 2,
+            "playtimeSeconds": 5377
           },
           "203": {
-            "games": 72,
-            "wins": 45,
-            "losses": 27,
-            "playtimeSeconds": 129534
+            "games": 97,
+            "wins": 58,
+            "losses": 39,
+            "playtimeSeconds": 177162
           },
           "104": {
-            "games": 51,
+            "games": 53,
             "wins": 22,
-            "losses": 29,
-            "playtimeSeconds": 93843
+            "losses": 31,
+            "playtimeSeconds": 97587
           },
           "102": {
             "games": 2,
@@ -621,10 +661,10 @@
             "playtimeSeconds": 5496
           },
           "141": {
-            "games": 1,
+            "games": 2,
             "wins": 0,
-            "losses": 1,
-            "playtimeSeconds": 1835
+            "losses": 2,
+            "playtimeSeconds": 3472
           },
           "121": {
             "games": 1,
@@ -639,16 +679,16 @@
             "playtimeSeconds": 1706
           },
           "56": {
-            "games": 3,
+            "games": 5,
             "wins": 1,
-            "losses": 2,
-            "playtimeSeconds": 4469
+            "losses": 4,
+            "playtimeSeconds": 7881
           },
           "950": {
-            "games": 23,
+            "games": 24,
             "wins": 15,
-            "losses": 8,
-            "playtimeSeconds": 39342
+            "losses": 9,
+            "playtimeSeconds": 41766
           },
           "78": {
             "games": 1,
@@ -679,13 +719,19 @@
             "wins": 0,
             "losses": 1,
             "playtimeSeconds": 2016
+          },
+          "202": {
+            "games": 1,
+            "wins": 0,
+            "losses": 1,
+            "playtimeSeconds": 2389
           }
         },
         "mostPlayedChampionId": "203",
         "highestWinrateChampionId": "113",
-        "lowestWinrateChampionId": "234",
-        "highestWinrateChampionWR": 1.0,
-        "lowestWinrateChampionWR": 0.3076923076923077,
+        "lowestWinrateChampionId": "56",
+        "highestWinrateChampionWR": 0.8333333333333334,
+        "lowestWinrateChampionWR": 0.2,
         "avgLpGainPerWin": null,
         "avgLpLossPerLoss": null,
         "lpDelta": {
@@ -741,47 +787,7 @@
         "NA1_5387214296",
         "NA1_5387196399",
         "NA1_5386817086",
-        "NA1_5386784025",
-        "NA1_5386735939",
-        "NA1_5386694598",
-        "NA1_5385199458",
-        "NA1_5385164612",
-        "NA1_5385136848",
-        "NA1_5385101247",
-        "NA1_5383436848",
-        "NA1_5383403856",
-        "NA1_5383360996",
-        "NA1_5383322354",
-        "NA1_5383277492",
-        "NA1_5383212269",
-        "NA1_5381657200",
-        "NA1_5381619748",
-        "NA1_5381572459",
-        "NA1_5381541172",
-        "NA1_5381482419",
-        "NA1_5380323107",
-        "NA1_5378131361",
-        "NA1_5378094685",
-        "NA1_5378047695",
-        "NA1_5378008862",
-        "NA1_5377962146",
-        "NA1_5377903303",
-        "NA1_5377828703",
-        "NA1_5377759965",
-        "NA1_5376763968",
-        "NA1_5376702596",
-        "NA1_5376654731",
-        "NA1_5376609983",
-        "NA1_5375213853",
-        "NA1_5375175289",
-        "NA1_5375123645",
-        "NA1_5375052728",
-        "NA1_5374985524",
-        "NA1_5374908322",
-        "NA1_5374832563",
-        "NA1_5374764905",
-        "NA1_5373073767",
-        "NA1_5373059858"
+        "NA1_5386784025"
       ]
     }
   }
