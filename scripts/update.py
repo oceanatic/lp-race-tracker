@@ -27,7 +27,7 @@ SPLIT_START_UNIX = 1736380800
 
 # Match-v5 paging + rate safety
 MATCH_PAGE_SIZE = 100                 # match-v5 max per request
-MAX_MATCH_DETAILS_PER_RUN = 12        # cap match detail fetches per run (prevents 429 spam)
+MAX_MATCH_DETAILS_PER_RUN = 40        # cap match detail fetches per run (prevents 429 spam)
 RATE_LIMIT_HIT_LIMIT = 2              # if we hit 429 this many times in a run, stop early
 
 # Backfill tuning (to catch up to large histories like Mike's 551 games)
