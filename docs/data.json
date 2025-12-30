@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T04:01:10.109423-05:00",
-    "display": "Last Updated: 4:01AM on 12/30"
+    "iso": "2025-12-30T04:02:07.943123-05:00",
+    "display": "Last Updated: 4:02AM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -242,17 +242,21 @@
         "NA1_5444168974",
         "NA1_5444188211",
         "NA1_5444221057",
-        "NA1_5445602080"
+        "NA1_5445602080",
+        "NA1_5445637784",
+        "NA1_5450121647",
+        "NA1_5450148332",
+        "NA1_5450171794"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 96,
+        "splitMatchesProcessed": 100,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 169724,
-        "totalPlaytimeHMS": "47:08:44",
-        "games": 96,
-        "wins": 50,
-        "losses": 46,
+        "totalPlaytimeSeconds": 175948,
+        "totalPlaytimeHMS": "48:52:28",
+        "games": 100,
+        "wins": 53,
+        "losses": 47,
         "champions": {
           "60": {
             "games": 25,
@@ -321,10 +325,10 @@
             "playtimeSeconds": 1702
           },
           "54": {
-            "games": 5,
+            "games": 6,
             "wins": 2,
-            "losses": 3,
-            "playtimeSeconds": 9758
+            "losses": 4,
+            "playtimeSeconds": 11493
           },
           "201": {
             "games": 1,
@@ -363,22 +367,28 @@
             "playtimeSeconds": 1772
           },
           "203": {
-            "games": 9,
-            "wins": 6,
+            "games": 11,
+            "wins": 8,
             "losses": 3,
-            "playtimeSeconds": 14516
+            "playtimeSeconds": 17144
           },
           "104": {
             "games": 1,
             "wins": 0,
             "losses": 1,
             "playtimeSeconds": 1747
+          },
+          "102": {
+            "games": 1,
+            "wins": 1,
+            "losses": 0,
+            "playtimeSeconds": 1861
           }
         },
         "mostPlayedChampionId": "60",
-        "highestWinrateChampionId": "421",
+        "highestWinrateChampionId": "203",
         "lowestWinrateChampionId": "234",
-        "highestWinrateChampionWR": 0.7,
+        "highestWinrateChampionWR": 0.7272727272727273,
         "lowestWinrateChampionWR": 0.3333333333333333,
         "avgLpGainPerWin": null,
         "avgLpLossPerLoss": null,
