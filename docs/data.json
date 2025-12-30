@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T04:00:48.934728-05:00",
-    "display": "Last Updated: 4:00AM on 12/30"
+    "iso": "2025-12-30T04:01:10.109423-05:00",
+    "display": "Last Updated: 4:01AM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -230,23 +230,35 @@
         "NA1_5438742930",
         "NA1_5439015257",
         "NA1_5439053008",
-        "NA1_5439087651"
+        "NA1_5439087651",
+        "NA1_5439119948",
+        "NA1_5439145676",
+        "NA1_5439169895",
+        "NA1_5439199158",
+        "NA1_5439218565",
+        "NA1_5444053972",
+        "NA1_5444104915",
+        "NA1_5444140890",
+        "NA1_5444168974",
+        "NA1_5444188211",
+        "NA1_5444221057",
+        "NA1_5445602080"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 84,
+        "splitMatchesProcessed": 96,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 147899,
-        "totalPlaytimeHMS": "41:04:59",
-        "games": 84,
-        "wins": 43,
-        "losses": 41,
+        "totalPlaytimeSeconds": 169724,
+        "totalPlaytimeHMS": "47:08:44",
+        "games": 96,
+        "wins": 50,
+        "losses": 46,
         "champions": {
           "60": {
-            "games": 23,
-            "wins": 15,
-            "losses": 8,
-            "playtimeSeconds": 43012
+            "games": 25,
+            "wins": 16,
+            "losses": 9,
+            "playtimeSeconds": 46215
           },
           "36": {
             "games": 2,
@@ -255,10 +267,10 @@
             "playtimeSeconds": 3514
           },
           "234": {
-            "games": 16,
-            "wins": 5,
-            "losses": 11,
-            "playtimeSeconds": 27519
+            "games": 18,
+            "wins": 6,
+            "losses": 12,
+            "playtimeSeconds": 31703
           },
           "113": {
             "games": 3,
@@ -291,10 +303,10 @@
             "playtimeSeconds": 3526
           },
           "32": {
-            "games": 3,
-            "wins": 2,
-            "losses": 1,
-            "playtimeSeconds": 5181
+            "games": 5,
+            "wins": 3,
+            "losses": 2,
+            "playtimeSeconds": 9092
           },
           "80": {
             "games": 6,
@@ -333,10 +345,10 @@
             "playtimeSeconds": 1788
           },
           "30": {
-            "games": 1,
+            "games": 2,
             "wins": 1,
-            "losses": 0,
-            "playtimeSeconds": 2043
+            "losses": 1,
+            "playtimeSeconds": 4530
           },
           "154": {
             "games": 1,
@@ -351,10 +363,10 @@
             "playtimeSeconds": 1772
           },
           "203": {
-            "games": 4,
-            "wins": 2,
-            "losses": 2,
-            "playtimeSeconds": 6476
+            "games": 9,
+            "wins": 6,
+            "losses": 3,
+            "playtimeSeconds": 14516
           },
           "104": {
             "games": 1,
@@ -367,7 +379,7 @@
         "highestWinrateChampionId": "421",
         "lowestWinrateChampionId": "234",
         "highestWinrateChampionWR": 0.7,
-        "lowestWinrateChampionWR": 0.3125,
+        "lowestWinrateChampionWR": 0.3333333333333333,
         "avgLpGainPerWin": null,
         "avgLpLossPerLoss": null,
         "lpDelta": {
