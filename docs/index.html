@@ -81,7 +81,7 @@
       text-transform: uppercase;
     }
 
-    /* NEW: small top-line status */
+    /* small top-line status */
     .coverage{
       font-size: 13px;
       color: var(--muted);
@@ -144,15 +144,15 @@
     .name{
       display:flex;
       flex-direction:column;
-      gap:8px; /* a bit more breathing room */
+      gap:8px;
       min-width: 0;
       padding-top: 2px;
     }
 
-    /* UPDATED: make Chucky / Mike bigger and use vertical space */
+    /* Chucky / Mike */
     .riot{
       margin:0;
-      font-size: 34px;        /* was 20px */
+      font-size: 34px;
       font-weight: 950;
       letter-spacing: 0.6px;
       text-transform: uppercase;
@@ -341,8 +341,7 @@
     <div class="top">
       <div class="brand">
         <h1>Chucky vs Mike: Race to Emerald</h1>
-        <!-- NEW -->
-        <div class="coverage" id="coverage">Coverage: …</div>
+        <div class="coverage" id="coverage">Total Games: …</div>
       </div>
       <div class="updated" id="updated">Last Updated: …</div>
     </div>
@@ -411,21 +410,16 @@
     return playerKey;
   }
 
-  function champGames(stats, champId){
-    const cid = champId != null ? String(champId) : null;
-    if (!cid) return null;
-    const d = stats?.champions?.[cid];
-    return d && Number.isFinite(d.games) ? d.games : null;
-  }
-
-  function champWL(stats, champId){
+  function champStats(stats, champId){
     const cid = champId != null ? String(champId) : null;
     if (!cid) return null;
     const d = stats?.champions?.[cid];
     if (!d) return null;
+    const g = Number.isFinite(d.games) ? d.games : 0;
     const w = Number.isFinite(d.wins) ? d.wins : 0;
     const l = Number.isFinite(d.losses) ? d.losses : 0;
-    return { w, l };
+    const wr = g > 0 ? (w / g) : null;
+    return { g, w, l, wr };
   }
 
   // ---------------------------
@@ -567,27 +561,19 @@
     const cards = document.getElementById("cards");
     cards.innerHTML = "";
 
-    // NEW: Coverage display: total processed vs total ladder games
-    // - processed = matchesSeen length (or stats.splitMatchesProcessed fallback)
-    // - total = current.games (authoritative from league-v4)
-    let processedSum = 0;
-    let totalSum = 0;
+    // Total Games: sum of league-v4 authoritative games across both players
+    let totalGamesAllPlayers = 0;
 
     for (const [key, p] of Object.entries(data.players || {})){
       const cur = p.current;
       const s = p.stats || {};
 
-      const processed = Array.isArray(p.matchesSeen)
-        ? p.matchesSeen.length
-        : (Number.isFinite(s.splitMatchesProcessed) ? s.splitMatchesProcessed : 0);
-
-      const total = (cur && Number.isFinite(cur.games)) ? cur.games : 0;
-
-      processedSum += processed;
-      totalSum += total;
-
       const winrate = cur && cur.winrate != null ? (cur.winrate * 100).toFixed(1) + "%" : "n/a";
       const peakText = p.peak ? `${p.peak.tier} ${p.peak.division} — ${p.peak.lp} LP` : "n/a";
+
+      // accumulate total games (authoritative ladder)
+      const total = (cur && Number.isFinite(cur.games)) ? cur.games : 0;
+      totalGamesAllPlayers += total;
 
       const barsHtml = BARS.map((bar) => {
         const prog = computeBarProgress(cur, bar);
@@ -610,13 +596,24 @@
         `;
       }).join("");
 
-      const mostPlayedGames = (s.mostPlayedChampionId != null) ? (champGames(s, s.mostPlayedChampionId) ?? 0) : 0;
+      const most = champStats(s, s.mostPlayedChampionId);
+      const hi = champStats(s, s.highestWinrateChampionId);
+      const lo = champStats(s, s.lowestWinrateChampionId);
 
-      const hiWL = champWL(s, s.highestWinrateChampionId);
-      const loWL = champWL(s, s.lowestWinrateChampionId);
+      const mostText =
+        (s.mostPlayedChampionId != null && most)
+          ? `${champName(s.mostPlayedChampionId)} (${most.g} games • ${most.wr != null ? (most.wr*100).toFixed(1) : "n/a"}% winrate)`
+          : "n/a";
 
-      const hiWR = (s.highestWinrateChampionWR != null) ? (s.highestWinrateChampionWR * 100).toFixed(1) + "%" : "n/a";
-      const loWR = (s.lowestWinrateChampionWR != null) ? (s.lowestWinrateChampionWR * 100).toFixed(1) + "%" : "n/a";
+      const hiText =
+        (s.highestWinrateChampionId != null && hi)
+          ? `${champName(s.highestWinrateChampionId)} • ${hi.wr != null ? (hi.wr*100).toFixed(1) : "n/a"}% (W ${hi.w} / L ${hi.l})`
+          : "n/a";
+
+      const loText =
+        (s.lowestWinrateChampionId != null && lo)
+          ? `${champName(s.lowestWinrateChampionId)} • ${lo.wr != null ? (lo.wr*100).toFixed(1) : "n/a"}% (W ${lo.w} / L ${lo.l})`
+          : "n/a";
 
       const board = document.createElement("div");
       board.className = "board";
@@ -628,7 +625,7 @@
           <div class="rankBox">
             <div class="rankLine">Current</div>
             <div class="rankBig">${curLabel(cur)}</div>
-            <div class="rankLine">Peak (since tracking): ${peakText}</div>
+            <div class="rankLine">Peak: ${peakText}</div>
           </div>
         </div>
 
@@ -639,36 +636,28 @@
 
           <div class="kpi">
             <div class="tile">
-              <div class="k">Games (Solo/Duo)</div>
+              <div class="k">Total Games</div>
               <div class="v">${cur ? cur.games : (s.games ?? 0)} (W ${cur ? cur.wins : (s.wins ?? 0)} / L ${cur ? cur.losses : (s.losses ?? 0)})</div>
             </div>
             <div class="tile">
-              <div class="k">Overall winrate</div>
+              <div class="k">Overall Winrate</div>
               <div class="v">${winrate}</div>
             </div>
             <div class="tile">
-              <div class="k">Total playtime (tracked)</div>
+              <div class="k">Total Playtime</div>
               <div class="v">${s.totalPlaytimeHMS || "0:00:00"}</div>
             </div>
             <div class="tile">
-              <div class="k">Most played champ</div>
-              <div class="v">${s.mostPlayedChampionId != null ? `${champName(s.mostPlayedChampionId)} (${mostPlayedGames} games)` : "n/a"}</div>
+              <div class="k">Most Played Champ</div>
+              <div class="v">${mostText}</div>
             </div>
             <div class="tile">
-              <div class="k">Highest WR champ (min 5 games)</div>
-              <div class="v">${
-                s.highestWinrateChampionId != null
-                  ? `${champName(s.highestWinrateChampionId)} • ${hiWR} (W ${hiWL ? hiWL.w : 0} / L ${hiWL ? hiWL.l : 0})`
-                  : "n/a"
-              }</div>
+              <div class="k">Highest WR Champ (min 5 games)</div>
+              <div class="v">${hiText}</div>
             </div>
             <div class="tile">
-              <div class="k">Lowest WR champ (min 5 games)</div>
-              <div class="v">${
-                s.lowestWinrateChampionId != null
-                  ? `${champName(s.lowestWinrateChampionId)} • ${loWR} (W ${loWL ? loWL.w : 0} / L ${loWL ? loWL.l : 0})`
-                  : "n/a"
-              }</div>
+              <div class="k">Lowest WR Champ (min 5 games)</div>
+              <div class="v">${loText}</div>
             </div>
           </div>
         </div>
@@ -676,14 +665,9 @@
       cards.appendChild(board);
     }
 
-    // Render coverage line
+    // Top line: Total Games
     const covEl = document.getElementById("coverage");
-    if (totalSum > 0){
-      const pct = Math.min(100, Math.max(0, (processedSum / totalSum) * 100));
-      covEl.textContent = `Coverage: showing data for ${processedSum} / ${totalSum} ranked games (${pct.toFixed(1)}%)`;
-    } else {
-      covEl.textContent = `Coverage: n/a`;
-    }
+    covEl.textContent = `Total Games: ${totalGamesAllPlayers}`;
 
     // ---------------------------
     // Lead calculation (LP-equivalent)
