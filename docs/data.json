@@ -403,7 +403,7 @@
       },
       "backfill": {
         "nextStart": 100,
-        "done": true
+        "done": false
       }
     }
   }
