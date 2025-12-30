@@ -319,13 +319,22 @@ def update_player(state, p):
 
     MIN_GAMES_FOR_BEST_WORST = 5
     eligible = [r for r in champ_rows if r[1] >= MIN_GAMES_FOR_BEST_WORST and r[3] is not None]
+    
     if len(eligible) >= 2:
-        best = max(eligible, key=lambda r: (r[3], r[1]))
-        worst = min(eligible, key=lambda r: (r[3], -r[1]))
+        best = max(eligible, key=lambda r: (r[3], r[1]))      # higher WR, then more games
+        worst = min(eligible, key=lambda r: (r[3], -r[1]))    # lower WR, then more games
         stats["highestWinrateChampionId"] = best[0]
         stats["lowestWinrateChampionId"] = worst[0]
         stats["highestWinrateChampionWR"] = best[3]
         stats["lowestWinrateChampionWR"] = worst[3]
+    
+    elif len(eligible) == 1:
+        only = eligible[0]
+        stats["highestWinrateChampionId"] = only[0]
+        stats["lowestWinrateChampionId"] = only[0]
+        stats["highestWinrateChampionWR"] = only[3]
+        stats["lowestWinrateChampionWR"] = only[3]
+    
     else:
         stats["highestWinrateChampionId"] = None
         stats["lowestWinrateChampionId"] = None
