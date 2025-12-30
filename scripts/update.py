@@ -4,20 +4,23 @@ import requests
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-# -----------------------------
+# ----------------------------
 # Config
-# -----------------------------
-RIOT_API_KEY = os.environ["RIOT_API_KEY"].strip()  # strip accidental whitespace/newlines
+# ----------------------------
+RIOT_API_KEY = os.environ.get("RIOT_API_KEY", "").strip()
+if not RIOT_API_KEY:
+    raise RuntimeError("RIOT_API_KEY env var is missing/empty.")
 
 PLAYERS = [
     {"label": "mentallyunhinged", "gameName": "mentallyunhinged", "tagLine": "0626"},
     {"label": "mikebeastem", "gameName": "mikebeastem", "tagLine": "MRD"},
 ]
 
-# Routing:
-# - account-v1 and match-v5: regional routing (AMERICAS for NA/BR/LAN/LAS)
-# - summoner-v4 and league-v4: platform routing (na1/br1/la1/la2/oc1, etc.)
-REGIONAL = "americas"
+# account-v1 + match-v5 are REGIONAL routing
+REGIONAL = "americas"  # NA/BR/LAN/LAS
+
+# summoner-v4 + league-v4 are PLATFORM routing (within AMERICAS group)
+AMERICAS_PLATFORMS = ["na1", "br1", "la1", "la2"]
 
 QUEUE_RANKED_SOLO = 420
 QUEUE_TYPE_SOLO = "RANKED_SOLO_5x5"
@@ -36,17 +39,14 @@ RATE_LIMIT_HIT_LIMIT = 2
 BACKFILL_PAGES_PER_RUN = 7
 STOP_BACKFILL_ON_FIRST_SEEN = True
 
-# Candidate platforms in AMERICAS routing group
-AMERICAS_PLATFORMS = ["na1", "br1", "la1", "la2", "oc1"]
 
-
-# -----------------------------
-# HTTP helpers
-# -----------------------------
+# ----------------------------
+# HTTP helper
+# ----------------------------
 def riot_get(url, params=None, max_retries=6):
     headers = {"X-Riot-Token": RIOT_API_KEY}
-
     last = None
+
     for attempt in range(max_retries):
         r = requests.get(url, headers=headers, params=params, timeout=30)
         last = r
@@ -57,25 +57,19 @@ def riot_get(url, params=None, max_retries=6):
         # Rate limited
         if r.status_code == 429:
             retry_after = r.headers.get("Retry-After")
-            if retry_after is not None:
-                sleep_s = float(retry_after)
-            else:
-                sleep_s = min(60.0, (2 ** attempt) + random.random())
+            sleep_s = float(retry_after) if retry_after is not None else min(60.0, (2 ** attempt) + random.random())
             time.sleep(sleep_s)
             continue
 
-        # Transient server issues
+        # Transient
         if r.status_code in (500, 502, 503, 504):
             sleep_s = min(30.0, (2 ** attempt) + random.random())
             time.sleep(sleep_s)
             continue
 
-        # Surface Riot's JSON error body (super helpful)
-        body_preview = r.text[:800] if r.text else ""
-        raise requests.HTTPError(
-            f"{r.status_code} for {url} params={params} body={body_preview}",
-            response=r
-        )
+        # Hard failure: surface Riot body
+        body_preview = (r.text or "")[:800]
+        raise requests.HTTPError(f"{r.status_code} for {url} params={params} body={body_preview}", response=r)
 
     if last is not None:
         raise requests.HTTPError(
@@ -85,65 +79,24 @@ def riot_get(url, params=None, max_retries=6):
     raise requests.HTTPError(f"Failed after retries ({max_retries}) for {url}")
 
 
-# -----------------------------
-# Data helpers
-# -----------------------------
-def rank_value(tier, division, lp):
-    tier_order = {
-        "IRON": 0, "BRONZE": 1, "SILVER": 2, "GOLD": 3,
-        "PLATINUM": 4, "EMERALD": 5, "DIAMOND": 6,
-        "MASTER": 7, "GRANDMASTER": 8, "CHALLENGER": 9
-    }
-    div_order = {"IV": 0, "III": 1, "II": 2, "I": 3}
-    return tier_order.get(tier, -1) * 10000 + div_order.get(division, 0) * 1000 + int(lp)
-
-
-def load_state():
-    if os.path.exists(OUT_PATH):
-        with open(OUT_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {
-        "updatedAt": None,
-        "split": {
-            "queue": QUEUE_RANKED_SOLO,
-            "queueType": QUEUE_TYPE_SOLO,
-            "startUnix": SPLIT_START_UNIX
-        },
-        "players": {}
-    }
-
-
-def save_state(state):
-    os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
-    with open(OUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(state, f, indent=2, ensure_ascii=False)
-
-
-def seconds_to_hms(total):
-    total = int(total)
-    h = total // 3600
-    m = (total % 3600) // 60
-    s = total % 60
-    return f"{h:d}:{m:02d}:{s:02d}"
-
-
-# -----------------------------
+# ----------------------------
 # Riot API wrappers
-# -----------------------------
+# ----------------------------
 def get_puuid(gameName, tagLine):
-    gn = urllib.parse.quote(str(gameName))
-    tl = urllib.parse.quote(str(tagLine))
+    gn = urllib.parse.quote(gameName)
+    tl = urllib.parse.quote(tagLine)
     url = f"https://{REGIONAL}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gn}/{tl}"
     data = riot_get(url)
-    if "puuid" not in data:
+    puuid = data.get("puuid")
+    if not puuid:
         raise RuntimeError(f"Account lookup failed: {data}")
-    return str(data["puuid"]).strip()
+    return str(puuid).strip()
 
 
 def get_match_ids(puuid, start=0, count=20, start_time=None):
     puuid = str(puuid).strip()
     url = f"https://{REGIONAL}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
-    params = {"queue": QUEUE_RANKED_SOLO, "start": int(start), "count": int(count)}
+    params = {"queue": QUEUE_RANKED_SOLO, "start": start, "count": count}
     if start_time is not None:
         params["startTime"] = int(start_time)
     return riot_get(url, params=params)
@@ -155,8 +108,8 @@ def get_match(match_id):
 
 
 def get_summoner_by_puuid(platform, puuid):
-    puuid = str(puuid).strip()
     platform = str(platform).strip().lower()
+    puuid = str(puuid).strip()
     url = f"https://{platform}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
     return riot_get(url)
 
@@ -175,32 +128,85 @@ def get_ranked_solo_entry(entries):
     return None
 
 
-def try_resolve_platform_and_summoner_id(puuid, preferred=None):
+# ----------------------------
+# State helpers
+# ----------------------------
+def load_state():
+    if os.path.exists(OUT_PATH):
+        with open(OUT_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {
+        "updatedAt": None,
+        "split": {"queue": QUEUE_RANKED_SOLO, "queueType": QUEUE_TYPE_SOLO, "startUnix": SPLIT_START_UNIX},
+        "players": {}
+    }
+
+
+def save_state(state):
+    os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
+    with open(OUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=2, ensure_ascii=False)
+
+
+def seconds_to_hms(total):
+    total = int(total)
+    h = total // 3600
+    m = (total % 3600) // 60
+    s = total % 60
+    return f"{h:d}:{m:02d}:{s:02d}"
+
+
+def rank_value(tier, division, lp):
+    tier_order = {
+        "IRON": 0, "BRONZE": 1, "SILVER": 2, "GOLD": 3,
+        "PLATINUM": 4, "EMERALD": 5, "DIAMOND": 6,
+        "MASTER": 7, "GRANDMASTER": 8, "CHALLENGER": 9
+    }
+    div_order = {"IV": 0, "III": 1, "II": 2, "I": 3}
+    return tier_order.get(tier, -1) * 10000 + div_order.get(division, 0) * 1000 + int(lp)
+
+
+# ----------------------------
+# Platform resolution (FIX)
+# ----------------------------
+def resolve_platform_and_summoner_id(puuid, cached_platform=None, cached_sid=None):
     """
-    Robustly find the correct platform for a PUUID by probing summoner-v4.
-    Wrong platform often returns 400 "Exception decrypting ...", so we try others.
-    Returns (platform, summonerId) or (None, None).
+    Try (platform -> summoner-v4/by-puuid) across AMERICAS platforms.
+    Cache platform + encryptedSummonerId (field "id") once found.
     """
     puuid = str(puuid).strip()
-    candidates = []
-    if preferred:
-        candidates.append(str(preferred).strip().lower())
-    candidates.extend([p for p in AMERICAS_PLATFORMS if p not in candidates])
 
-    for plat in candidates:
+    # 1) If cached is present, try it first
+    if cached_platform and cached_sid:
+        try:
+            _ = get_league_entries_by_summoner(cached_platform, cached_sid)
+            return cached_platform, cached_sid
+        except requests.HTTPError:
+            # cache stale/wrong -> fall through
+            pass
+
+    last_err = None
+
+    # 2) Try each Americas platform
+    for plat in AMERICAS_PLATFORMS:
         try:
             summ = get_summoner_by_puuid(plat, puuid)
             sid = summ.get("id")
             if sid:
                 return plat, sid
-        except requests.HTTPError:
+            last_err = RuntimeError(f"summoner-v4 returned no 'id' on {plat}: {summ}")
+        except requests.HTTPError as e:
+            last_err = e
+            # If the key is invalid, you’ll often see 401/403 consistently.
+            # Still continue a bit to gather a meaningful last error body.
             continue
-    return None, None
+
+    raise RuntimeError(f"Could not resolve platform/summonerId for puuid={puuid}. Last error: {last_err}")
 
 
-# -----------------------------
-# Main update logic
-# -----------------------------
+# ----------------------------
+# Core update
+# ----------------------------
 def update_player(state, p):
     label = p["label"]
     players = state.setdefault("players", {})
@@ -209,7 +215,7 @@ def update_player(state, p):
         "riotId": f'{p["gameName"]}#{p["tagLine"]}',
         "puuid": None,
 
-        # Cache for platform-routed APIs
+        # Platform routed info
         "platform": None,
         "summonerId": None,
 
@@ -221,19 +227,13 @@ def update_player(state, p):
         "peak": None,
         "lpHistory": [],
 
-        # Match-derived stats
+        # Match-derived split stats
         "matchesSeen": [],
-
-        # Persistent queue of match IDs discovered but not yet processed
         "pendingMatchIds": [],
-
-        # Backfill cursor
         "backfill": {"nextStart": 0, "done": False},
 
         "stats": {
-            "splitMatchIdsFound": None,
             "splitMatchesProcessed": 0,
-            "splitBackfillRemaining": None,
 
             "totalPlaytimeSeconds": 0,
             "totalPlaytimeHMS": "0:00:00",
@@ -252,29 +252,28 @@ def update_player(state, p):
         }
     })
 
-    # Ensure older saved states have new fields
+    # Ensure new fields exist in older data.json
     st.setdefault("platform", None)
     st.setdefault("summonerId", None)
     st.setdefault("pendingMatchIds", [])
     st.setdefault("backfill", {"nextStart": 0, "done": False})
+    st.setdefault("matchesSeen", [])
+    st.setdefault("lpHistory", [])
+    st.setdefault("stats", {})
 
-    # Resolve PUUID (regional)
+    # Resolve PUUID
     if not st["puuid"]:
         st["puuid"] = get_puuid(p["gameName"], p["tagLine"])
 
-    # Resolve platform + encryptedSummonerId robustly (platform routed)
-    if not st.get("platform") or not st.get("summonerId"):
-        plat, sid = try_resolve_platform_and_summoner_id(st["puuid"], preferred=st.get("platform"))
-        if not plat or not sid:
-            print(f"[{label}] ERROR: Could not resolve platform/summonerId for puuid={st['puuid']}. Skipping this player.")
-            return
-        st["platform"] = plat
-        st["summonerId"] = sid
+    # Resolve platform + encryptedSummonerId (correct fix)
+    plat, sid = resolve_platform_and_summoner_id(st["puuid"], st.get("platform"), st.get("summonerId"))
+    st["platform"] = plat
+    st["summonerId"] = sid
 
-    # League snapshot (authoritative ladder totals)
+    # Current rank snapshot via league-v4 (platform routed)
     entries = get_league_entries_by_summoner(st["platform"], st["summonerId"])
     if not isinstance(entries, list):
-        raise RuntimeError(f"[{label}] League entries lookup failed: {entries}")
+        raise RuntimeError(f"League entries lookup failed: {entries}")
 
     solo = get_ranked_solo_entry(entries)
 
@@ -282,6 +281,7 @@ def update_player(state, p):
     snap = {"ts": now_ts}
 
     lwins = llosses = lgames = None
+
     if solo:
         tier = solo.get("tier")
         div = solo.get("rank")
@@ -308,13 +308,12 @@ def update_player(state, p):
         if (not last) or (last.get("tier"), last.get("division"), last.get("lp")) != (snap["tier"], snap["division"], snap["lp"]):
             st["lpHistory"].append(snap)
 
-        # Peak since tracking began
         cur_val = rank_value(snap["tier"], snap["division"], snap["lp"])
         peak = st.get("peak")
         if (not peak) or cur_val > rank_value(peak["tier"], peak["division"], peak["lp"]):
             st["peak"] = {"tier": snap["tier"], "division": snap["division"], "lp": snap["lp"], "ts": now_ts}
 
-    # LP delta (best-effort)
+    # Snapshot LP delta (best-effort)
     lp_delta = None
     if len(st["lpHistory"]) >= 2:
         prev_lp = int(st["lpHistory"][-2]["lp"])
@@ -322,25 +321,23 @@ def update_player(state, p):
         lp_delta = cur_lp - prev_lp
 
     stats = st["stats"]
+    stats.setdefault("lpDelta", {"wins": [], "losses": []})
+    stats.setdefault("champions", {})
+
     seen = set(st["matchesSeen"])
     backfill = st["backfill"]
 
     pending = st["pendingMatchIds"]
     pending_set = set(pending)
 
-    recent_ids = None
-    pages_scanned = 0
-
     # 1) Backfill scan -> enqueue
+    pages_scanned = 0
     if not backfill.get("done", False):
         while pages_scanned < BACKFILL_PAGES_PER_RUN:
             start = int(backfill.get("nextStart", 0))
             ids = get_match_ids(st["puuid"], start=start, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
-            if not isinstance(ids, list):
-                raise RuntimeError(f"[{label}] Match ID lookup failed: {ids}")
 
             pages_scanned += 1
-
             if not ids:
                 backfill["done"] = True
                 break
@@ -359,9 +356,6 @@ def update_player(state, p):
 
     # 2) Realtime enqueue newest page
     recent_ids = get_match_ids(st["puuid"], start=0, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
-    if not isinstance(recent_ids, list):
-        raise RuntimeError(f"[{label}] Match ID lookup failed: {recent_ids}")
-
     for mid in recent_ids:
         if mid in seen:
             break
@@ -372,9 +366,8 @@ def update_player(state, p):
     # 3) Process pending oldest->newest, capped
     to_process = []
     while pending and len(to_process) < MAX_MATCH_DETAILS_PER_RUN:
-        mid = pending.pop()  # oldest-ish
-        pending_set.discard(mid)
-        to_process.append(mid)
+        to_process.append(pending.pop())
+        pending_set.discard(to_process[-1])
 
     rate_limit_hits = 0
     new_match_results = []
@@ -387,17 +380,15 @@ def update_player(state, p):
             if "429" in msg:
                 rate_limit_hits += 1
                 if rate_limit_hits >= RATE_LIMIT_HIT_LIMIT:
-                    print(f"[{label}] Too many 429s; stopping early this run.")
-                    # Put remaining unprocessed back into pending
+                    print("Too many 429s; stopping early this run.")
+                    # requeue unprocessed
                     idx = to_process.index(mid)
                     for back_mid in reversed(to_process[idx:]):
                         if back_mid not in seen and back_mid not in pending_set:
                             pending.append(back_mid)
                             pending_set.add(back_mid)
                     break
-
-            print(f"[{label}] Skipping match due to HTTPError: {mid} -> {e}")
-            # Put it back to retry next run
+            # requeue single
             if mid not in seen and mid not in pending_set:
                 pending.append(mid)
                 pending_set.add(mid)
@@ -406,9 +397,7 @@ def update_player(state, p):
         info = m.get("info", {})
         participants = info.get("participants", [])
         me = next((x for x in participants if x.get("puuid") == st["puuid"]), None)
-
         if not me:
-            # Put it back; don't drop
             if mid not in seen and mid not in pending_set:
                 pending.append(mid)
                 pending_set.add(mid)
@@ -418,36 +407,28 @@ def update_player(state, p):
         champ_id = str(me.get("championId"))
         duration = int(info.get("gameDuration", 0))
 
-        stats["games"] += 1
-        if win:
-            stats["wins"] += 1
-        else:
-            stats["losses"] += 1
+        stats["games"] = int(stats.get("games", 0)) + 1
+        stats["wins"] = int(stats.get("wins", 0)) + (1 if win else 0)
+        stats["losses"] = int(stats.get("losses", 0)) + (0 if win else 1)
 
-        stats["totalPlaytimeSeconds"] += max(duration, 0)
+        stats["totalPlaytimeSeconds"] = int(stats.get("totalPlaytimeSeconds", 0)) + max(duration, 0)
 
-        c = stats["champions"].setdefault(
-            champ_id,
-            {"games": 0, "wins": 0, "losses": 0, "playtimeSeconds": 0}
-        )
+        c = stats["champions"].setdefault(champ_id, {"games": 0, "wins": 0, "losses": 0, "playtimeSeconds": 0})
         c["games"] += 1
-        if win:
-            c["wins"] += 1
-        else:
-            c["losses"] += 1
+        c["wins"] += 1 if win else 0
+        c["losses"] += 0 if win else 1
         c["playtimeSeconds"] += max(duration, 0)
 
         st["matchesSeen"].append(mid)
         seen.add(mid)
         new_match_results.append((mid, win))
 
-    # Derived aggregates
     stats["splitMatchesProcessed"] = len(st["matchesSeen"])
     stats["totalPlaytimeHMS"] = seconds_to_hms(stats["totalPlaytimeSeconds"])
 
-    champs = stats["champions"]
+    # Derived champ stats
     champ_rows = []
-    for cid, d in champs.items():
+    for cid, d in stats["champions"].items():
         g = d["games"]
         w = d["wins"]
         wr = (w / g) if g else None
@@ -460,8 +441,8 @@ def update_player(state, p):
     eligible = [r for r in champ_rows if r[1] >= MIN_GAMES_FOR_BEST_WORST and r[3] is not None]
 
     if len(eligible) >= 2:
-        best = max(eligible, key=lambda r: (r[3], r[1]))      # higher WR, then more games
-        worst = min(eligible, key=lambda r: (r[3], -r[1]))    # lower WR, then more games
+        best = max(eligible, key=lambda r: (r[3], r[1]))
+        worst = min(eligible, key=lambda r: (r[3], -r[1]))
         stats["highestWinrateChampionId"] = best[0]
         stats["lowestWinrateChampionId"] = worst[0]
         stats["highestWinrateChampionWR"] = best[3]
@@ -478,7 +459,7 @@ def update_player(state, p):
         stats["highestWinrateChampionWR"] = None
         stats["lowestWinrateChampionWR"] = None
 
-    # LP gain/loss best-effort attribution only when exactly 1 match processed this run
+    # LP gain/loss best-effort attribution
     if lp_delta is not None and len(new_match_results) == 1:
         _, w = new_match_results[0]
         if w:
@@ -491,14 +472,11 @@ def update_player(state, p):
     stats["avgLpGainPerWin"] = (sum(wins) / len(wins)) if wins else None
     stats["avgLpLossPerLoss"] = (sum(losses) / len(losses)) if losses else None
 
-    newest = recent_ids[0] if recent_ids else None
-    newest_is_seen = (recent_ids and (recent_ids[0] in set(st["matchesSeen"])))
-
+    # Debug
     print(f"[{label}] platform={st['platform']} summonerId_cached={'yes' if st.get('summonerId') else 'no'}")
     print(f"[{label}] SOLO ladder games now={lgames if solo else 'n/a'} W={lwins if solo else 'n/a'} L={llosses if solo else 'n/a'}")
     print(f"[{label}] seen_total={len(st['matchesSeen'])} new_details_processed_this_run={len(new_match_results)}")
     print(f"[{label}] pending={len(st['pendingMatchIds'])} backfill_done={backfill.get('done')} nextStart={backfill.get('nextStart')} pages_scanned={pages_scanned}")
-    print(f"[{label}] fetched_ids={len(recent_ids) if recent_ids is not None else 'n/a'} newest={newest} newest_is_seen={newest_is_seen}")
 
 
 def main():
@@ -506,7 +484,11 @@ def main():
     state.setdefault("split", {"queue": QUEUE_RANKED_SOLO, "queueType": QUEUE_TYPE_SOLO, "startUnix": SPLIT_START_UNIX})
 
     for p in PLAYERS:
-        update_player(state, p)
+        try:
+            update_player(state, p)
+        except Exception as e:
+            # Fail loudly but keep the run alive for the other player
+            print(f"[{p['label']}] ERROR: {e}. Skipping this player.")
 
     now_ny = datetime.now(timezone.utc).astimezone(ZoneInfo("America/New_York"))
     state["updatedAt"] = {
