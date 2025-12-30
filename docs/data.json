@@ -423,7 +423,7 @@
         }
       },
       "backfill": {
-        "nextStart": 500,
+        "nextStart": 0,
         "done": true
       }
     }
