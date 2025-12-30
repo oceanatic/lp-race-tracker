@@ -1,1 +1,63 @@
-a
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LP Race Tracker</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 24px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; }
+    .muted { color: #666; font-size: 0.9em; }
+    h2 { margin: 0 0 8px; }
+    ul { margin: 8px 0 0 18px; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>LP Race Tracker (NA Solo/Duo)</h1>
+  <div class="muted" id="updated"></div>
+  <div class="row" id="cards"></div>
+
+<script>
+async function load() {
+  const res = await fetch("./data.json", { cache: "no-store" });
+  const data = await res.json();
+
+  document.getElementById("updated").textContent =
+    "Last updated (UTC): " + (data.updatedAt || "unknown");
+
+  const cards = document.getElementById("cards");
+  cards.innerHTML = "";
+
+  for (const [key, p] of Object.entries(data.players || {})) {
+    const cur = p.current;
+    const s = p.stats || {};
+    const winrate = cur && cur.winrate != null ? (cur.winrate * 100).toFixed(1) + "%" : "n/a";
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h2>${p.riotId}</h2>
+      <div class="muted">Key: <code>${key}</code></div>
+      <ul>
+        <li><b>Current:</b> ${cur ? `${cur.tier} ${cur.division} — ${cur.lp} LP` : "Unranked / placements"}</li>
+        <li><b>Peak (since tracking):</b> ${p.peak ? `${p.peak.tier} ${p.peak.division} — ${p.peak.lp} LP` : "n/a"}</li>
+        <li><b>Games:</b> ${cur ? cur.games : (s.games ?? 0)} (W ${cur ? cur.wins : s.wins} / L ${cur ? cur.losses : s.losses})</li>
+        <li><b>Overall winrate:</b> ${winrate}</li>
+        <li><b>Total playtime:</b> ${s.totalPlaytimeHMS || "0:00:00"}</li>
+        <li><b>Most played champ ID:</b> ${s.mostPlayedChampionId ?? "n/a"}</li>
+        <li><b>Highest WR champ ID (min 5 games):</b> ${s.highestWinrateChampionId ?? "n/a"}</li>
+        <li><b>Lowest WR champ ID (min 5 games):</b> ${s.lowestWinrateChampionId ?? "n/a"}</li>
+        <li><b>Avg LP gain / win (est.):</b> ${s.avgLpGainPerWin != null ? s.avgLpGainPerWin.toFixed(2) : "n/a"}</li>
+        <li><b>Avg LP loss / loss (est.):</b> ${s.avgLpLossPerLoss != null ? s.avgLpLossPerLoss.toFixed(2) : "n/a"}</li>
+      </ul>
+      <div class="muted">LP deltas are best-effort (dodges/promos/multi-game gaps can skew).</div>
+    `;
+    cards.appendChild(card);
+  }
+}
+load();
+</script>
+</body>
+</html>
