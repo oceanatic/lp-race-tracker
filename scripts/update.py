@@ -285,17 +285,12 @@ def update_player(state, p):
             # Advance cursor for next run/page
             backfill["nextStart"] = start + MATCH_PAGE_SIZE
 
-            # Optimization: if this page intersects history we've already processed, stop early.
-            if STOP_BACKFILL_ON_FIRST_SEEN and len(page_new) < len(ids):
-                # We encountered at least one seen ID inside this page.
-                # That strongly implies older pages will be mostly/entirely seen.
-                backfill["done"] = True
-                break
+            # If Riot returns fewer than a full page, you're near the end of history.
+            # We'll still advance and let the next fetch return [] to confirm completion.
+            if len(ids) < MATCH_PAGE_SIZE:
+                # don't mark done yet; next run/page will confirm
+                pass
 
-            # If entire page was seen, we are done.
-            if len(page_new) == 0:
-                backfill["done"] = True
-                break
 
     else:
         # Realtime mode: only fetch newest page and stop at first already-seen match (your original behavior).
