@@ -13,7 +13,7 @@ PLAYERS = [
 
 # Routing:
 # - account-v1 and match-v5: regional routing (AMERICAS for NA)
-# - league-v4: platform routing (NA1 for NA)
+# - summoner-v4 and league-v4: platform routing (NA1 for NA)
 REGIONAL = "americas"
 PLATFORM = "na1"
 
@@ -61,6 +61,13 @@ def riot_get(url, params=None, max_retries=6):
             sleep_s = min(30.0, (2 ** attempt) + random.random())
             time.sleep(sleep_s)
             continue
+
+        # Better visibility for bad requests
+        if r.status_code == 400:
+            raise requests.HTTPError(
+                f"400 for {url} params={params} body={r.text[:400]}",
+                response=r
+            )
 
         # Hard failure: wrong key, forbidden, bad request, etc.
         r.raise_for_status()
@@ -113,8 +120,22 @@ def get_puuid(gameName, tagLine):
     return data["puuid"]
 
 
+def get_summoner_by_puuid(puuid):
+    # PUUID is in the URL path; encode it to be safe
+    pu = urllib.parse.quote(str(puuid), safe="")
+    url = f"https://{PLATFORM}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{pu}"
+    return riot_get(url)
+
+
 def get_league_entries_by_puuid(puuid):
-    url = f"https://{PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
+    # Stable approach: Summoner-V4 by PUUID -> encryptedSummonerId -> League-V4 by-summoner
+    summ = get_summoner_by_puuid(puuid)
+    enc_id = summ.get("id")
+    if not enc_id:
+        raise RuntimeError(f"Summoner lookup failed (missing id): {summ}")
+
+    sid = urllib.parse.quote(str(enc_id), safe="")
+    url = f"https://{PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-summoner/{sid}"
     return riot_get(url)
 
 
@@ -126,7 +147,8 @@ def get_ranked_solo_entry(entries):
 
 
 def get_match_ids(puuid, start=0, count=20, start_time=None):
-    url = f"https://{REGIONAL}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
+    pu = urllib.parse.quote(str(puuid), safe="")
+    url = f"https://{REGIONAL}.api.riotgames.com/lol/match/v5/matches/by-puuid/{pu}/ids"
     params = {"queue": QUEUE_RANKED_SOLO, "start": start, "count": count}
     if start_time is not None:
         params["startTime"] = int(start_time)
@@ -134,7 +156,8 @@ def get_match_ids(puuid, start=0, count=20, start_time=None):
 
 
 def get_match(match_id):
-    url = f"https://{REGIONAL}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+    mid = urllib.parse.quote(str(match_id), safe="")
+    url = f"https://{REGIONAL}.api.riotgames.com/lol/match/v5/matches/{mid}"
     return riot_get(url)
 
 
@@ -164,7 +187,7 @@ def update_player(state, p):
         # Match-derived split stats (incremental)
         "matchesSeen": [],
 
-        # NEW: persistent queue of match IDs we discovered but haven't processed yet
+        # persistent queue of match IDs we discovered but haven't processed yet
         "pendingMatchIds": [],
 
         # Backfill cursor/state
@@ -268,7 +291,7 @@ def update_player(state, p):
     # -----------------------------
     recent_ids = None  # for logging only
 
-    # 1) Backfill: scan pages and enqueue unseen IDs (do NOT rely on immediate processing)
+    # 1) Backfill: scan pages and enqueue unseen IDs
     pages_scanned = 0
     if not backfill.get("done", False):
         while pages_scanned < BACKFILL_PAGES_PER_RUN:
@@ -283,25 +306,19 @@ def update_player(state, p):
                 backfill["done"] = True
                 break
 
-            # Optional optimization: if we hit anything we've already processed, we're overlapping
             intersects_seen = any(mid in seen for mid in ids)
 
-            # Enqueue any not already seen/pending
             for mid in ids:
                 if mid not in seen and mid not in pending_set:
                     pending.append(mid)
                     pending_set.add(mid)
 
-            # Advance cursor
             backfill["nextStart"] = start + MATCH_PAGE_SIZE
 
-            # If we’re near the end of history (short page), keep going; next call will confirm done.
-            # If optimization enabled, stop scanning when overlap is detected to save requests.
             if STOP_BACKFILL_ON_FIRST_SEEN and intersects_seen:
                 break
 
-    # 2) Realtime: even if backfill is done, always check newest page and enqueue new matches
-    # (This keeps the tracker live while backfill continues or after it completes.)
+    # 2) Realtime: always check newest page and enqueue new matches
     recent_ids = get_match_ids(st["puuid"], start=0, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
     if not isinstance(recent_ids, list):
         raise RuntimeError(f"Match ID lookup failed: {recent_ids}")
@@ -314,18 +331,9 @@ def update_player(state, p):
             pending_set.add(mid)
 
     # 3) Process from pending, oldest->newest, capped
-    # Riot returns newest->oldest; pending likely has a mix. We sort by rough age using list position:
-    # simplest reliable approach: process the oldest items in pending by taking from the end if
-    # we keep appending newest first. However our enqueue loops append in API order (newest->oldest),
-    # and we may append many pages. To ensure oldest->newest, just reverse a copy and take from that,
-    # while removing processed from pending.
-    #
-    # Practical approach: process the *oldest* by taking from the end of the list.
-    # This converges correctly and stabilizes LP deltas attribution too.
     to_process = []
     while pending and len(to_process) < MAX_MATCH_DETAILS_PER_RUN:
         to_process.append(pending.pop())  # oldest-ish
-        # keep pending_set in sync
         pending_set.discard(to_process[-1])
 
     rate_limit_hits = 0
@@ -340,14 +348,12 @@ def update_player(state, p):
                 rate_limit_hits += 1
                 if rate_limit_hits >= RATE_LIMIT_HIT_LIMIT:
                     print("Too many 429s; stopping early this run to stay stable.")
-                    # Put unprocessed IDs back into pending so we don't lose them
                     for back_mid in reversed(to_process[to_process.index(mid):]):
                         if back_mid not in seen and back_mid not in pending_set:
                             pending.append(back_mid)
                             pending_set.add(back_mid)
                     break
             print(f"Skipping match due to HTTPError: {mid} -> {e}")
-            # Put it back so we can retry next run
             if mid not in seen and mid not in pending_set:
                 pending.append(mid)
                 pending_set.add(mid)
@@ -357,7 +363,6 @@ def update_player(state, p):
         participants = info.get("participants", [])
         me = next((x for x in participants if x.get("puuid") == st["puuid"]), None)
         if not me:
-            # Put back; something is off, but don't drop it
             if mid not in seen and mid not in pending_set:
                 pending.append(mid)
                 pending_set.add(mid)
@@ -390,7 +395,6 @@ def update_player(state, p):
         seen.add(mid)
         new_match_results.append((mid, win))
 
-    # We know what we've processed; this is "match-details processed", not "total split games".
     stats["splitMatchesProcessed"] = len(st["matchesSeen"])
     stats["totalPlaytimeHMS"] = seconds_to_hms(stats["totalPlaytimeSeconds"])
 
@@ -410,8 +414,8 @@ def update_player(state, p):
     eligible = [r for r in champ_rows if r[1] >= MIN_GAMES_FOR_BEST_WORST and r[3] is not None]
 
     if len(eligible) >= 2:
-        best = max(eligible, key=lambda r: (r[3], r[1]))      # higher WR, then more games
-        worst = min(eligible, key=lambda r: (r[3], -r[1]))    # lower WR, then more games
+        best = max(eligible, key=lambda r: (r[3], r[1]))
+        worst = min(eligible, key=lambda r: (r[3], -r[1]))
         stats["highestWinrateChampionId"] = best[0]
         stats["lowestWinrateChampionId"] = worst[0]
         stats["highestWinrateChampionWR"] = best[3]
@@ -441,7 +445,6 @@ def update_player(state, p):
     stats["avgLpGainPerWin"] = (sum(wins) / len(wins)) if wins else None
     stats["avgLpLossPerLoss"] = (sum(losses) / len(losses)) if losses else None
 
-    # Debug logging
     newest = recent_ids[0] if recent_ids else None
     newest_is_seen = (recent_ids and (recent_ids[0] in set(st["matchesSeen"])))
 
