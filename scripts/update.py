@@ -2,6 +2,7 @@
 import os, json, time, urllib.parse, random
 import requests
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo  # NEW
 
 RIOT_API_KEY = os.environ["RIOT_API_KEY"]
 
@@ -350,7 +351,17 @@ def main():
     state.setdefault("split", {"queue": QUEUE_RANKED_SOLO, "queueType": QUEUE_TYPE_SOLO, "startUnix": SPLIT_START_UNIX})
     for p in PLAYERS:
         update_player(state, p)
-    state["updatedAt"] = datetime.now(timezone.utc).isoformat()
+
+    # Write updatedAt in America/New_York with a clean display string (EST/EDT auto)
+    now_ny = datetime.now(timezone.utc).astimezone(ZoneInfo("America/New_York"))
+
+    # Linux (GitHub Actions) supports %-I and %-m/%-d (no leading zeros).
+    # If you ever run locally on Windows and it errors, use the fallback noted below.
+    state["updatedAt"] = {
+        "iso": now_ny.isoformat(),
+        "display": now_ny.strftime("Last Updated: %-I:%M %p on %-m/%-d")
+    }
+
     save_state(state)
 
 if __name__ == "__main__":
