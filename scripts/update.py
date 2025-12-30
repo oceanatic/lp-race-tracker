@@ -24,10 +24,12 @@ OUT_PATH = "docs/data.json"
 # Current ranked split start (NA): 2025-08-27 19:00:00 UTC (noon PT)
 SPLIT_START_UNIX = 1756321200
 
-# Match backfill controls (split-wide stats)
+# Near-real-time mode:
+# We fetch ONLY the newest page of IDs (100) and stop when we hit a seen match.
+# This keeps API usage low and updates fast.
 MATCH_PAGE_SIZE = 100           # match-v5 max per request
-MAX_SPLIT_MATCHES = 4000        # safety cap
-MAX_MATCH_DETAILS_PER_RUN = 30  # avoid rate limits while catching up (75 was too aggressive)
+MAX_MATCH_DETAILS_PER_RUN = 12  # near-real-time: only a handful of newest games per run
+RATE_LIMIT_HIT_LIMIT = 2        # if we hit 429 this many times in a run, stop early
 
 def riot_get(url, params=None, max_retries=6):
     headers = {"X-Riot-Token": RIOT_API_KEY}
@@ -103,11 +105,6 @@ def get_puuid(gameName, tagLine):
         raise RuntimeError(f"Account lookup failed: {data}")
     return data["puuid"]
 
-def get_summoner_by_puuid(puuid):
-    # Not strictly needed for rank anymore, but kept in case you want display name later.
-    url = f"https://{PLATFORM}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
-    return riot_get(url)
-
 def get_league_entries_by_puuid(puuid):
     url = f"https://{PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
     return riot_get(url)
@@ -144,22 +141,22 @@ def update_player(state, p):
         "puuid": None,
 
         # League (authoritative ladder state)
-        "current": None,        # rank/LP snapshot
-        "leagueRecord": None,   # wins/losses/games/winrate from League-V4
+        "current": None,
+        "leagueRecord": None,
 
         # Peak/History (rank/LP snapshots)
         "peak": None,
         "lpHistory": [],
 
-        # Match-derived split stats
+        # Match-derived split stats (incremental)
         "matchesSeen": [],
         "stats": {
-            # Backfill transparency
-            "splitMatchIdsFound": 0,
+            # Transparency: in near-real-time mode we only know "processed" count.
+            # We keep these fields for UI compatibility, but we do NOT do full split backfill.
+            "splitMatchIdsFound": None,
             "splitMatchesProcessed": 0,
-            "splitBackfillRemaining": 0,
+            "splitBackfillRemaining": None,
 
-            # Split aggregates (from processed Match-V5 matches)
             "totalPlaytimeSeconds": 0,
             "totalPlaytimeHMS": "0:00:00",
             "games": 0, "wins": 0, "losses": 0,
@@ -168,8 +165,6 @@ def update_player(state, p):
             "mostPlayedChampionId": None,
             "highestWinrateChampionId": None,
             "lowestWinrateChampionId": None,
-
-            # Optional: expose WR values so it doesn't look "random"
             "highestWinrateChampionWR": None,
             "lowestWinrateChampionWR": None,
 
@@ -179,11 +174,11 @@ def update_player(state, p):
         }
     })
 
-    # Resolve PUUID (stable identifier)
+    # Resolve PUUID
     if not st["puuid"]:
         st["puuid"] = get_puuid(p["gameName"], p["tagLine"])
 
-    # Current rank snapshot (Solo/Duo) via League-V4 by PUUID
+    # Current rank snapshot (Solo/Duo)
     entries = get_league_entries_by_puuid(st["puuid"])
     if not isinstance(entries, list):
         raise RuntimeError(f"League entries lookup failed: {entries}")
@@ -207,9 +202,7 @@ def update_player(state, p):
             "wins": lwins, "losses": llosses, "games": lgames,
             "winrate": lwinrate
         }
-        st["leagueRecord"] = {
-            "wins": lwins, "losses": llosses, "games": lgames, "winrate": lwinrate
-        }
+        st["leagueRecord"] = {"wins": lwins, "losses": llosses, "games": lgames, "winrate": lwinrate}
         snap.update({"tier": tier, "division": div, "lp": lp})
     else:
         st["current"] = None
@@ -234,46 +227,44 @@ def update_player(state, p):
         cur_lp = int(st["lpHistory"][-1]["lp"])
         lp_delta = cur_lp - prev_lp
 
-    # Pull ALL solo/duo match IDs since split start (paginated)
-    all_ids = []
-    start = 0
-    while len(all_ids) < MAX_SPLIT_MATCHES:
-        batch = get_match_ids(
-            st["puuid"],
-            start=start,
-            count=MATCH_PAGE_SIZE,
-            start_time=SPLIT_START_UNIX
-        )
-        if not isinstance(batch, list) or not batch:
-            break
-        all_ids.extend(batch)
-        start += len(batch)
-        if len(batch) < MATCH_PAGE_SIZE:
-            break
-
     stats = st["stats"]
-
-    # Backfill transparency
-    stats["splitMatchIdsFound"] = len(all_ids)
-    stats["splitMatchesProcessed"] = len(st["matchesSeen"])
-    stats["splitBackfillRemaining"] = max(0, len(all_ids) - len(st["matchesSeen"]))
-
-    # Process new match IDs only
     seen = set(st["matchesSeen"])
-    new_ids = [mid for mid in all_ids if mid not in seen]
-    new_ids.reverse()  # oldest -> newest
 
-    # Avoid rate limits while catching up
+    # Near-real-time: only fetch the newest page and stop at first already-seen match.
+    recent_ids = get_match_ids(
+        st["puuid"],
+        start=0,
+        count=MATCH_PAGE_SIZE,
+        start_time=SPLIT_START_UNIX
+    )
+    if not isinstance(recent_ids, list):
+        raise RuntimeError(f"Match ID lookup failed: {recent_ids}")
+
+    new_ids = []
+    for mid in recent_ids:
+        if mid in seen:
+            break
+        new_ids.append(mid)
+
+    # Process oldest->newest
+    new_ids.reverse()
+
     if len(new_ids) > MAX_MATCH_DETAILS_PER_RUN:
         new_ids = new_ids[:MAX_MATCH_DETAILS_PER_RUN]
 
-    # Process matches
-    new_match_results = []  # store (matchId, win) for LP delta attribution
+    rate_limit_hits = 0
+    new_match_results = []
+
     for mid in new_ids:
         try:
             m = get_match(mid)
         except requests.HTTPError as e:
-            # Skip this match for now; do NOT mark as seen.
+            msg = str(e)
+            if "429" in msg:
+                rate_limit_hits += 1
+                if rate_limit_hits >= RATE_LIMIT_HIT_LIMIT:
+                    print("Too many 429s; stopping early this run to stay stable.")
+                    break
             print(f"Skipping match due to HTTPError: {mid} -> {e}")
             continue
 
@@ -309,9 +300,9 @@ def update_player(state, p):
         st["matchesSeen"].append(mid)
         new_match_results.append((mid, win))
 
-    # Update backfill transparency after appending new matches
+    # Transparency: we know what we've processed, but we are not doing full split enumeration.
     stats["splitMatchesProcessed"] = len(st["matchesSeen"])
-    stats["splitBackfillRemaining"] = max(0, len(all_ids) - len(st["matchesSeen"]))
+    stats["totalPlaytimeHMS"] = seconds_to_hms(stats["totalPlaytimeSeconds"])
 
     # Derived champ stats
     champs = stats["champions"]
@@ -328,9 +319,8 @@ def update_player(state, p):
     MIN_GAMES_FOR_BEST_WORST = 5
     eligible = [r for r in champ_rows if r[1] >= MIN_GAMES_FOR_BEST_WORST and r[3] is not None]
     if len(eligible) >= 2:
-        # Tie-break so it doesn't look like "most played == best"
-        best = max(eligible, key=lambda r: (r[3], r[1]))    # higher WR, then more games
-        worst = min(eligible, key=lambda r: (r[3], -r[1]))  # lower WR, then more games
+        best = max(eligible, key=lambda r: (r[3], r[1]))
+        worst = min(eligible, key=lambda r: (r[3], -r[1]))
         stats["highestWinrateChampionId"] = best[0]
         stats["lowestWinrateChampionId"] = worst[0]
         stats["highestWinrateChampionWR"] = best[3]
@@ -341,14 +331,11 @@ def update_player(state, p):
         stats["highestWinrateChampionWR"] = None
         stats["lowestWinrateChampionWR"] = None
 
-    # Playtime formatted
-    stats["totalPlaytimeHMS"] = seconds_to_hms(stats["totalPlaytimeSeconds"])
-
     # LP gain/loss best-effort attribution:
-    # Only attribute if exactly ONE new match was processed this run AND we have an LP delta snapshot.
+    # attribute only if exactly ONE new match processed and LP delta exists.
     if lp_delta is not None and len(new_match_results) == 1:
-        _, win = new_match_results[0]
-        if win:
+        _, w = new_match_results[0]
+        if w:
             stats["lpDelta"]["wins"].append(lp_delta)
         else:
             stats["lpDelta"]["losses"].append(abs(lp_delta))
@@ -360,7 +347,6 @@ def update_player(state, p):
 
 def main():
     state = load_state()
-    # Ensure split metadata exists even if file already existed
     state.setdefault("split", {"queue": QUEUE_RANKED_SOLO, "queueType": QUEUE_TYPE_SOLO, "startUnix": SPLIT_START_UNIX})
     for p in PLAYERS:
         update_player(state, p)
