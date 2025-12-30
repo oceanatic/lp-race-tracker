@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-30T07:01:36.205835+00:00",
+  "updatedAt": "2025-12-30T07:06:31.370763+00:00",
   "players": {
     "mentallyunhinged": {
       "riotId": "mentallyunhinged#0626",
@@ -235,14 +235,26 @@
         "NA1_5406392186",
         "NA1_5407214420",
         "NA1_5407231943",
-        "NA1_5407424542"
+        "NA1_5407424542",
+        "NA1_5407485443",
+        "NA1_5407515164",
+        "NA1_5407544610",
+        "NA1_5407563108",
+        "NA1_5407584849",
+        "NA1_5409072554",
+        "NA1_5409093952",
+        "NA1_5409108880",
+        "NA1_5409132787",
+        "NA1_5410293713",
+        "NA1_5410328511",
+        "NA1_5410354550"
       ],
       "stats": {
-        "totalPlaytimeSeconds": 248762,
-        "totalPlaytimeHMS": "69:06:02",
-        "games": 135,
-        "wins": 68,
-        "losses": 67,
+        "totalPlaytimeSeconds": 270655,
+        "totalPlaytimeHMS": "75:10:55",
+        "games": 147,
+        "wins": 75,
+        "losses": 72,
         "champions": {
           "203": {
             "games": 55,
@@ -275,10 +287,10 @@
             "playtimeSeconds": 4924
           },
           "234": {
-            "games": 9,
+            "games": 10,
             "wins": 3,
-            "losses": 6,
-            "playtimeSeconds": 15122
+            "losses": 7,
+            "playtimeSeconds": 16814
           },
           "104": {
             "games": 3,
@@ -287,10 +299,10 @@
             "playtimeSeconds": 5775
           },
           "113": {
-            "games": 7,
-            "wins": 5,
+            "games": 10,
+            "wins": 8,
             "losses": 2,
-            "playtimeSeconds": 10924
+            "playtimeSeconds": 15895
           },
           "80": {
             "games": 1,
@@ -329,10 +341,10 @@
             "playtimeSeconds": 7052
           },
           "36": {
-            "games": 1,
+            "games": 2,
             "wins": 0,
-            "losses": 1,
-            "playtimeSeconds": 1583
+            "losses": 2,
+            "playtimeSeconds": 3241
           },
           "24": {
             "games": 1,
@@ -347,10 +359,10 @@
             "playtimeSeconds": 4405
           },
           "60": {
-            "games": 2,
-            "wins": 0,
-            "losses": 2,
-            "playtimeSeconds": 3249
+            "games": 8,
+            "wins": 3,
+            "losses": 5,
+            "playtimeSeconds": 15445
           },
           "497": {
             "games": 5,
@@ -393,6 +405,12 @@
             "wins": 1,
             "losses": 0,
             "playtimeSeconds": 2072
+          },
+          "421": {
+            "games": 1,
+            "wins": 1,
+            "losses": 0,
+            "playtimeSeconds": 1376
           }
         },
         "mostPlayedChampionId": "203",
@@ -405,10 +423,10 @@
           "losses": []
         },
         "splitMatchIdsFound": 234,
-        "splitMatchesProcessed": 135,
+        "splitMatchesProcessed": 147,
         "splitBackfillRemaining": 99,
-        "highestWinrateChampionWR": 0.7142857142857143,
-        "lowestWinrateChampionWR": 0.3333333333333333
+        "highestWinrateChampionWR": 0.8,
+        "lowestWinrateChampionWR": 0.3
       },
       "leagueRecord": {
         "wins": 291,
