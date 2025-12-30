@@ -5,132 +5,470 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LP Race Tracker</title>
   <style>
-    body { font-family: system-ui, Arial; margin: 24px; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; }
-    .muted { color: #666; font-size: 0.9em; }
-    h2 { margin: 0 0 8px; }
-    ul { margin: 8px 0 0 18px; }
-    code { background: #f5f5f5; padding: 2px 6px; border-radius: 6px; }
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.10);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.65);
+      --muted2: rgba(255,255,255,0.50);
+      --shadow: 0 12px 40px rgba(0,0,0,0.35);
+      --radius: 16px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% 0%, rgba(121, 82, 255, 0.22), transparent 55%),
+        radial-gradient(900px 700px at 100% 10%, rgba(0, 240, 255, 0.14), transparent 60%),
+        radial-gradient(900px 600px at 60% 110%, rgba(0, 255, 136, 0.10), transparent 60%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
+
+    .header{
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    h1{
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 0.2px;
+      font-weight: 720;
+    }
+
+    .subtitle{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .updated{
+      text-align: right;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .grid{
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px){
+      .grid{ grid-template-columns: 1fr; }
+      .updated{ text-align: left; white-space: normal; }
+      .header{ align-items: flex-start; flex-direction: column; }
+    }
+
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel), rgba(255,255,255,0.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      inset: 0;
+      background: radial-gradient(600px 200px at 20% 0%, rgba(255,255,255,0.06), transparent 55%);
+      pointer-events:none;
+    }
+
+    .cardTop{
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .name{
+      margin: 0;
+      font-size: 18px;
+      font-weight: 720;
+      letter-spacing: 0.2px;
+    }
+
+    .badge{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .badge strong{ color: var(--text); font-weight: 700; }
+
+    .section{
+      margin-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .kvs{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      margin-top: 10px;
+    }
+    @media (max-width: 520px){
+      .kvs{ grid-template-columns: 1fr; }
+    }
+
+    .kv{
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+    }
+    .kv .k{
+      color: var(--muted2);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .kv .v{
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: 0.2px;
+    }
+
+    /* Progress / milestones */
+    .progressWrap{
+      margin-top: 10px;
+    }
+
+    .progressHeader{
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .progressHeader .k{
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .progressHeader .v{
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15px;
+    }
+
+    .bar{
+      position: relative;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+
+    .fill{
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg,
+        rgba(0, 240, 255, 0.80),
+        rgba(121, 82, 255, 0.85),
+        rgba(0, 255, 136, 0.80)
+      );
+      transition: width 400ms ease;
+    }
+
+    .ticks{
+      position: relative;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .tick{
+      position: relative;
+      flex: 1;
+      text-align: center;
+      padding-top: 10px;
+    }
+
+    .tick::before{
+      content:"";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 8px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 2px;
+    }
+
+    .tick.active{
+      color: rgba(255,255,255,0.86);
+      font-weight: 650;
+    }
+
+    .note{
+      margin-top: 10px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    code{
+      background: rgba(255,255,255,0.07);
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.10);
+      color: rgba(255,255,255,0.82);
+    }
   </style>
 </head>
 <body>
-  <h1>LP Race Tracker (NA Solo/Duo)</h1>
-  <div class="muted" id="updated"></div>
-  <div class="row" id="cards"></div>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <h1>LP Race Tracker</h1>
+        <div class="subtitle">NA • Solo/Duo only • Goal: Emerald</div>
+      </div>
+      <div class="updated" id="updated">Last Updated: …</div>
+    </div>
+
+    <div class="grid" id="cards"></div>
+  </div>
 
 <script>
-let _updatedAtIso = null;
-let _updatedAtDisplay = null;
-let _relativeTimer = null;
+  // --- Time formatting (America/New_York) ---
+  function formatLastUpdated(isoString){
+    if (!isoString) return { display: "Last Updated: unknown", rel: "" };
 
-function plural(n, word) {
-  return n === 1 ? word : word + "s";
-}
+    const dt = new Date(isoString);
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    }).formatToParts(dt);
 
-function formatRelative(msAgo) {
-  // Guard
-  if (!Number.isFinite(msAgo)) return "";
+    const get = (type) => parts.find(p => p.type === type)?.value;
+    const mm = get("month");
+    const dd = get("day");
+    const hh = get("hour");
+    const min = get("minute");
+    const dayPeriod = get("dayPeriod"); // AM/PM
 
-  if (msAgo < 0) msAgo = 0;
+    // e.g. 3:39AM on 12/30
+    const display = `Last Updated: ${hh}:${min}${dayPeriod} on ${mm}/${dd}`;
 
-  const sec = Math.floor(msAgo / 1000);
-  if (sec < 10) return "(just now)";
-  if (sec < 60) return `(${sec} ${plural(sec, "second")} ago)`;
+    // Relative: "3 minutes ago"
+    const now = new Date();
+    const diffMs = now - dt;
+    const diffSec = Math.max(0, Math.floor(diffMs / 1000));
 
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `(${min} ${plural(min, "minute")} ago)`;
+    let rel;
+    if (diffSec < 10) rel = "just now";
+    else if (diffSec < 60) rel = `${diffSec} seconds ago`;
+    else if (diffSec < 3600) rel = `${Math.floor(diffSec/60)} minutes ago`;
+    else if (diffSec < 86400) rel = `${Math.floor(diffSec/3600)} hours ago`;
+    else rel = `${Math.floor(diffSec/86400)} days ago`;
 
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `(${hr} ${plural(hr, "hour")} ago)`;
-
-  const day = Math.floor(hr / 24);
-  return `(${day} ${plural(day, "day")} ago)`;
-}
-
-function renderUpdated() {
-  const el = document.getElementById("updated");
-
-  // Backward compatibility: updatedAt might be a string in older JSON
-  if (!_updatedAtIso && !_updatedAtDisplay) {
-    el.textContent = "Last Updated: unknown";
-    return;
+    return { display, rel };
   }
 
-  // If we have ISO, compute relative in real time
-  let rel = "";
-  if (_updatedAtIso) {
-    const t = Date.parse(_updatedAtIso);
-    if (!Number.isNaN(t)) {
-      rel = " " + formatRelative(Date.now() - t);
+  // --- Rank / progress math ---
+  // Milestones for "race to Emerald" (goal: Emerald IV)
+  const MILESTONES = [
+    { tier: "PLATINUM", div: "IV", label: "Plat IV" },
+    { tier: "PLATINUM", div: "III", label: "Plat III" },
+    { tier: "PLATINUM", div: "II", label: "Plat II" },
+    { tier: "PLATINUM", div: "I", label: "Plat I" },
+    { tier: "EMERALD",  div: "IV", label: "Emerald IV" }
+  ];
+
+  const tierOrder = {
+    "IRON": 0, "BRONZE": 1, "SILVER": 2, "GOLD": 3,
+    "PLATINUM": 4, "EMERALD": 5, "DIAMOND": 6,
+    "MASTER": 7, "GRANDMASTER": 8, "CHALLENGER": 9
+  };
+  const divOrder = {"IV": 0, "III": 1, "II": 2, "I": 3};
+
+  // Convert rank to a comparable number (LP scaled so division changes dominate)
+  function rankValue(tier, div, lp){
+    const t = tierOrder[tier] ?? -1;
+    const d = divOrder[div] ?? 0;
+    const L = Number.isFinite(lp) ? lp : 0;
+    return t * 10000 + d * 1000 + L; // same idea as your python
+  }
+
+  // For progress: treat each milestone as a step. Progress moves from Plat IV (0) to Emerald IV (1).
+  function progressToEmerald(cur){
+    if (!cur) return { pct: 0, reachedIndex: -1, curLabel: "Unranked / placements" };
+
+    const curV = rankValue(cur.tier, cur.division, cur.lp);
+
+    const start = MILESTONES[0];
+    const goal  = MILESTONES[MILESTONES.length - 1];
+
+    const startV = rankValue(start.tier, start.div, 0);
+    const goalV  = rankValue(goal.tier,  goal.div,  0);
+
+    // Clamp below start to 0, above goal to 1
+    const raw = (curV - startV) / (goalV - startV);
+    const pct = Math.max(0, Math.min(1, raw));
+
+    // Which milestone has been reached (by tier/div only; ignores LP within division)
+    let reachedIndex = -1;
+    for (let i = 0; i < MILESTONES.length; i++){
+      const m = MILESTONES[i];
+      const mv = rankValue(m.tier, m.div, 0);
+      if (curV >= mv) reachedIndex = i;
     }
+
+    const curLabel = `${cur.tier} ${cur.division} — ${cur.lp} LP`;
+    return { pct, reachedIndex, curLabel };
   }
 
-  // Prefer display string (EST/EDT baked by Python)
-  if (_updatedAtDisplay) {
-    el.textContent = _updatedAtDisplay + rel;
-  } else {
-    // Fallback: show ISO if no display is provided
-    el.textContent = "Last Updated: " + _updatedAtIso + rel;
-  }
-}
-
-async function load() {
-  const res = await fetch("./data.json", { cache: "no-store" });
-  const data = await res.json();
-
-  // Handle both formats:
-  // New format: updatedAt = { iso, display }
-  // Old format: updatedAt = "2025-...Z"
-  if (data.updatedAt && typeof data.updatedAt === "object") {
-    _updatedAtIso = data.updatedAt.iso || null;
-    _updatedAtDisplay = data.updatedAt.display || null;
-  } else if (typeof data.updatedAt === "string") {
-    _updatedAtIso = data.updatedAt;
-    _updatedAtDisplay = null;
-  } else {
-    _updatedAtIso = null;
-    _updatedAtDisplay = null;
+  function pctToLabel(pct){
+    return `${Math.round(pct * 100)}%`;
   }
 
-  renderUpdated();
+  async function load(){
+    const res = await fetch("./data.json", { cache: "no-store" });
+    const data = await res.json();
 
-  // Update relative time once per minute without refetching
-  if (_relativeTimer) clearInterval(_relativeTimer);
-  _relativeTimer = setInterval(renderUpdated, 60 * 1000);
+    const updated = data?.updatedAt?.iso ?? data?.updatedAt; // support older schema
+    const { display, rel } = formatLastUpdated(updated);
 
-  const cards = document.getElementById("cards");
-  cards.innerHTML = "";
+    document.getElementById("updated").textContent = rel ? `${display} (${rel})` : display;
 
-  for (const [key, p] of Object.entries(data.players || {})) {
-    const cur = p.current;
-    const s = p.stats || {};
-    const winrate = cur && cur.winrate != null ? (cur.winrate * 100).toFixed(1) + "%" : "n/a";
+    const cards = document.getElementById("cards");
+    cards.innerHTML = "";
 
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <h2>${p.riotId}</h2>
-      <div class="muted">Key: <code>${key}</code></div>
-      <ul>
-        <li><b>Current:</b> ${cur ? `${cur.tier} ${cur.division} — ${cur.lp} LP` : "Unranked / placements"}</li>
-        <li><b>Peak (since tracking):</b> ${p.peak ? `${p.peak.tier} ${p.peak.division} — ${p.peak.lp} LP` : "n/a"}</li>
-        <li><b>Games:</b> ${cur ? cur.games : (s.games ?? 0)} (W ${cur ? cur.wins : (s.wins ?? 0)} / L ${cur ? cur.losses : (s.losses ?? 0)})</li>
-        <li><b>Overall winrate:</b> ${winrate}</li>
-        <li><b>Total playtime:</b> ${s.totalPlaytimeHMS || "0:00:00"}</li>
-        <li><b>Most played champ ID:</b> ${s.mostPlayedChampionId ?? "n/a"}</li>
-        <li><b>Highest WR champ ID (min 5 games):</b> ${s.highestWinrateChampionId ?? "n/a"}</li>
-        <li><b>Lowest WR champ ID (min 5 games):</b> ${s.lowestWinrateChampionId ?? "n/a"}</li>
-        <li><b>Avg LP gain / win (est.):</b> ${s.avgLpGainPerWin != null ? s.avgLpGainPerWin.toFixed(2) : "n/a"}</li>
-        <li><b>Avg LP loss / loss (est.):</b> ${s.avgLpLossPerLoss != null ? s.avgLpLossPerLoss.toFixed(2) : "n/a"}</li>
-      </ul>
-      <div class="muted">LP deltas are best-effort (dodges/promos/multi-game gaps can skew).</div>
-    `;
-    cards.appendChild(card);
+    for (const [key, p] of Object.entries(data.players || {})){
+      const cur = p.current;
+      const s = p.stats || {};
+      const winrate = cur && cur.winrate != null ? (cur.winrate * 100).toFixed(1) + "%" : "n/a";
+
+      const prog = progressToEmerald(cur);
+      const pctStr = pctToLabel(prog.pct);
+
+      // Milestone tick labels + active highlighting
+      const ticksHtml = MILESTONES.map((m, i) => {
+        const cls = (i <= prog.reachedIndex) ? "tick active" : "tick";
+        return `<div class="${cls}">${m.label}</div>`;
+      }).join("");
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const peakText = p.peak ? `${p.peak.tier} ${p.peak.division} — ${p.peak.lp} LP` : "n/a";
+
+      card.innerHTML = `
+        <div class="cardTop">
+          <h2 class="name">${p.riotId}</h2>
+          <div class="badge">Key: <strong><code>${key}</code></strong></div>
+        </div>
+
+        <div class="section">
+          <div class="progressHeader">
+            <div class="k">Progress to Emerald IV</div>
+            <div class="v">${pctStr}</div>
+          </div>
+
+          <div class="bar" aria-label="progress">
+            <div class="fill" style="width:${(prog.pct*100).toFixed(2)}%"></div>
+          </div>
+
+          <div class="ticks">${ticksHtml}</div>
+
+          <div class="note small">
+            Current: <b>${cur ? prog.curLabel : "Unranked / placements"}</b> • Peak (since tracking): <b>${peakText}</b>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="kvs">
+            <div class="kv">
+              <div class="k">Games (Solo/Duo)</div>
+              <div class="v">${cur ? cur.games : (s.games ?? 0)} (W ${cur ? cur.wins : (s.wins ?? 0)} / L ${cur ? cur.losses : (s.losses ?? 0)})</div>
+            </div>
+            <div class="kv">
+              <div class="k">Overall winrate</div>
+              <div class="v">${winrate}</div>
+            </div>
+            <div class="kv">
+              <div class="k">Total playtime (tracked)</div>
+              <div class="v">${s.totalPlaytimeHMS || "0:00:00"}</div>
+            </div>
+            <div class="kv">
+              <div class="k">Most played champ (ID)</div>
+              <div class="v">${s.mostPlayedChampionId ?? "n/a"}</div>
+            </div>
+            <div class="kv">
+              <div class="k">Highest WR champ (min 5 games)</div>
+              <div class="v">${s.highestWinrateChampionId ?? "n/a"}${s.highestWinrateChampionWR != null ? ` • ${(s.highestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
+            </div>
+            <div class="kv">
+              <div class="k">Lowest WR champ (min 5 games)</div>
+              <div class="v">${s.lowestWinrateChampionId ?? "n/a"}${s.lowestWinrateChampionWR != null ? ` • ${(s.lowestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
+            </div>
+          </div>
+
+          <div class="note">
+            LP deltas are best-effort. Dodges, remakes, promos, and multi-game gaps can skew “average LP gain/loss.”
+          </div>
+        </div>
+      `;
+
+      cards.appendChild(card);
+    }
+
+    // Update the relative time label every 10 seconds without refetching
+    // (The underlying data refresh is handled by your Actions schedule.)
+    setInterval(() => {
+      const updated2 = data?.updatedAt?.iso ?? data?.updatedAt;
+      const { display: d2, rel: r2 } = formatLastUpdated(updated2);
+      document.getElementById("updated").textContent = r2 ? `${d2} (${r2})` : d2;
+    }, 10000);
   }
-}
 
-load();
+  load();
 </script>
 </body>
 </html>
