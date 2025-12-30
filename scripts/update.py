@@ -31,7 +31,7 @@ MAX_MATCH_DETAILS_PER_RUN = 12        # cap match detail fetches per run (preven
 RATE_LIMIT_HIT_LIMIT = 2              # if we hit 429 this many times in a run, stop early
 
 # Backfill tuning (to catch up to large histories like Mike's 551 games)
-BACKFILL_PAGES_PER_RUN = 3            # scan N pages of IDs per run while backfilling (N*100 IDs scanned)
+BACKFILL_PAGES_PER_RUN = 7            # scan N pages of IDs per run while backfilling (N*100 IDs scanned)
 STOP_BACKFILL_ON_FIRST_SEEN = True    # faster: stop when we hit a page that intersects seen IDs
 
 
