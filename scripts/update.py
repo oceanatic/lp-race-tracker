@@ -32,7 +32,7 @@ RATE_LIMIT_HIT_LIMIT = 2              # if we hit 429 this many times in a run, 
 
 # Backfill tuning (to catch up to large histories like Mike's 551 games)
 BACKFILL_PAGES_PER_RUN = 7            # scan N pages of IDs per run while backfilling (N*100 IDs scanned)
-STOP_BACKFILL_ON_FIRST_SEEN = True    # faster: stop when we hit a page that intersects seen IDs
+STOP_BACKFILL_ON_FIRST_SEEN = True    # optional optimization
 
 
 def riot_get(url, params=None, max_retries=6):
@@ -65,7 +65,6 @@ def riot_get(url, params=None, max_retries=6):
         # Hard failure: wrong key, forbidden, bad request, etc.
         r.raise_for_status()
 
-    # Exhausted retries
     if last is not None:
         raise requests.HTTPError(
             f"Failed after retries ({max_retries}) for {url}: {last.status_code} {last.text[:200]}"
@@ -165,9 +164,12 @@ def update_player(state, p):
         # Match-derived split stats (incremental)
         "matchesSeen": [],
 
-        # Backfill cursor/state (NEW)
+        # NEW: persistent queue of match IDs we discovered but haven't processed yet
+        "pendingMatchIds": [],
+
+        # Backfill cursor/state
         "backfill": {
-            "nextStart": 0,   # pagination offset into match IDs
+            "nextStart": 0,
             "done": False
         },
 
@@ -193,8 +195,9 @@ def update_player(state, p):
         }
     })
 
-    # Ensure older saved states get backfill field
+    # Ensure older saved states have new fields
     st.setdefault("backfill", {"nextStart": 0, "done": False})
+    st.setdefault("pendingMatchIds", [])
 
     # Resolve PUUID
     if not st["puuid"]:
@@ -256,16 +259,18 @@ def update_player(state, p):
     seen = set(st["matchesSeen"])
     backfill = st["backfill"]
 
-    # -----------------------------
-    # NEW: Backfill paging + realtime
-    # -----------------------------
-    recent_ids = None  # only used for logging in realtime mode
-    new_ids = []
+    # Pending queue helpers
+    pending = st["pendingMatchIds"]
+    pending_set = set(pending)
 
+    # -----------------------------
+    # Backfill + realtime pipeline
+    # -----------------------------
+    recent_ids = None  # for logging only
+
+    # 1) Backfill: scan pages and enqueue unseen IDs (do NOT rely on immediate processing)
+    pages_scanned = 0
     if not backfill.get("done", False):
-        # Backfill mode: page through older IDs using start offsets.
-        # We collect unseen IDs across a few pages each run, then process only a capped number of match details.
-        pages_scanned = 0
         while pages_scanned < BACKFILL_PAGES_PER_RUN:
             start = int(backfill.get("nextStart", 0))
             ids = get_match_ids(st["puuid"], start=start, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
@@ -278,44 +283,55 @@ def update_player(state, p):
                 backfill["done"] = True
                 break
 
-            # ids is newest->oldest within this page; keep only unseen
-            page_new = [mid for mid in ids if mid not in seen]
-            new_ids.extend(page_new)
+            # Optional optimization: if we hit anything we've already processed, we're overlapping
+            intersects_seen = any(mid in seen for mid in ids)
 
-            # Advance cursor for next run/page
+            # Enqueue any not already seen/pending
+            for mid in ids:
+                if mid not in seen and mid not in pending_set:
+                    pending.append(mid)
+                    pending_set.add(mid)
+
+            # Advance cursor
             backfill["nextStart"] = start + MATCH_PAGE_SIZE
 
-            # If Riot returns fewer than a full page, you're near the end of history.
-            # We'll still advance and let the next fetch return [] to confirm completion.
-            if len(ids) < MATCH_PAGE_SIZE:
-                # don't mark done yet; next run/page will confirm
-                pass
-
-
-    else:
-        # Realtime mode: only fetch newest page and stop at first already-seen match (your original behavior).
-        recent_ids = get_match_ids(st["puuid"], start=0, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
-        if not isinstance(recent_ids, list):
-            raise RuntimeError(f"Match ID lookup failed: {recent_ids}")
-
-        for mid in recent_ids:
-            if mid in seen:
+            # If we’re near the end of history (short page), keep going; next call will confirm done.
+            # If optimization enabled, stop scanning when overlap is detected to save requests.
+            if STOP_BACKFILL_ON_FIRST_SEEN and intersects_seen:
                 break
-            new_ids.append(mid)
 
-    # De-dupe while preserving order, then process oldest->newest
-    if new_ids:
-        new_ids = list(dict.fromkeys(new_ids))
-        new_ids.reverse()
+    # 2) Realtime: even if backfill is done, always check newest page and enqueue new matches
+    # (This keeps the tracker live while backfill continues or after it completes.)
+    recent_ids = get_match_ids(st["puuid"], start=0, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
+    if not isinstance(recent_ids, list):
+        raise RuntimeError(f"Match ID lookup failed: {recent_ids}")
 
-    # Cap match detail calls per run
-    if len(new_ids) > MAX_MATCH_DETAILS_PER_RUN:
-        new_ids = new_ids[:MAX_MATCH_DETAILS_PER_RUN]
+    for mid in recent_ids:
+        if mid in seen:
+            break
+        if mid not in pending_set:
+            pending.append(mid)
+            pending_set.add(mid)
+
+    # 3) Process from pending, oldest->newest, capped
+    # Riot returns newest->oldest; pending likely has a mix. We sort by rough age using list position:
+    # simplest reliable approach: process the oldest items in pending by taking from the end if
+    # we keep appending newest first. However our enqueue loops append in API order (newest->oldest),
+    # and we may append many pages. To ensure oldest->newest, just reverse a copy and take from that,
+    # while removing processed from pending.
+    #
+    # Practical approach: process the *oldest* by taking from the end of the list.
+    # This converges correctly and stabilizes LP deltas attribution too.
+    to_process = []
+    while pending and len(to_process) < MAX_MATCH_DETAILS_PER_RUN:
+        to_process.append(pending.pop())  # oldest-ish
+        # keep pending_set in sync
+        pending_set.discard(to_process[-1])
 
     rate_limit_hits = 0
     new_match_results = []
 
-    for mid in new_ids:
+    for mid in to_process:
         try:
             m = get_match(mid)
         except requests.HTTPError as e:
@@ -324,14 +340,27 @@ def update_player(state, p):
                 rate_limit_hits += 1
                 if rate_limit_hits >= RATE_LIMIT_HIT_LIMIT:
                     print("Too many 429s; stopping early this run to stay stable.")
+                    # Put unprocessed IDs back into pending so we don't lose them
+                    for back_mid in reversed(to_process[to_process.index(mid):]):
+                        if back_mid not in seen and back_mid not in pending_set:
+                            pending.append(back_mid)
+                            pending_set.add(back_mid)
                     break
             print(f"Skipping match due to HTTPError: {mid} -> {e}")
+            # Put it back so we can retry next run
+            if mid not in seen and mid not in pending_set:
+                pending.append(mid)
+                pending_set.add(mid)
             continue
 
         info = m.get("info", {})
         participants = info.get("participants", [])
         me = next((x for x in participants if x.get("puuid") == st["puuid"]), None)
         if not me:
+            # Put back; something is off, but don't drop it
+            if mid not in seen and mid not in pending_set:
+                pending.append(mid)
+                pending_set.add(mid)
             continue
 
         win = bool(me.get("win"))
@@ -358,6 +387,7 @@ def update_player(state, p):
         c["playtimeSeconds"] += max(duration, 0)
 
         st["matchesSeen"].append(mid)
+        seen.add(mid)
         new_match_results.append((mid, win))
 
     # We know what we've processed; this is "match-details processed", not "total split games".
@@ -399,7 +429,6 @@ def update_player(state, p):
         stats["lowestWinrateChampionWR"] = None
 
     # LP gain/loss best-effort attribution:
-    # attribute only if exactly ONE new match processed and LP delta exists.
     if lp_delta is not None and len(new_match_results) == 1:
         _, w = new_match_results[0]
         if w:
@@ -413,19 +442,13 @@ def update_player(state, p):
     stats["avgLpLossPerLoss"] = (sum(losses) / len(losses)) if losses else None
 
     # Debug logging
-    newest = None
-    fetched_ids = None
-    newest_is_seen = None
-    if recent_ids is not None:
-        fetched_ids = len(recent_ids)
-        newest = recent_ids[0] if recent_ids else None
-        newest_is_seen = (recent_ids and (recent_ids[0] in seen))
+    newest = recent_ids[0] if recent_ids else None
+    newest_is_seen = (recent_ids and (recent_ids[0] in set(st["matchesSeen"])))
 
     print(f"[{label}] SOLO ladder games now={lgames if solo else 'n/a'} W={lwins if solo else 'n/a'} L={llosses if solo else 'n/a'}")
     print(f"[{label}] seen_total={len(st['matchesSeen'])} new_details_processed_this_run={len(new_match_results)}")
-    print(f"[{label}] backfill_done={backfill.get('done')} nextStart={backfill.get('nextStart')}")
-    if recent_ids is not None:
-        print(f"[{label}] fetched_ids={fetched_ids} newest={newest} newest_is_seen={newest_is_seen}")
+    print(f"[{label}] pending={len(st['pendingMatchIds'])} backfill_done={backfill.get('done')} nextStart={backfill.get('nextStart')} pages_scanned={pages_scanned}")
+    print(f"[{label}] fetched_ids={len(recent_ids) if recent_ids is not None else 'n/a'} newest={newest} newest_is_seen={newest_is_seen}")
 
 
 def main():
@@ -435,7 +458,6 @@ def main():
     for p in PLAYERS:
         update_player(state, p)
 
-    # Write updatedAt in America/New_York with a clean display string (EST/EDT auto)
     now_ny = datetime.now(timezone.utc).astimezone(ZoneInfo("America/New_York"))
     state["updatedAt"] = {
         "iso": now_ny.isoformat(),
