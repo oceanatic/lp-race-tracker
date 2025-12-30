@@ -52,14 +52,17 @@ def get_puuid(gameName, tagLine):
     tl = urllib.parse.quote(tagLine)
     url = f"https://{REGIONAL}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gn}/{tl}"
     data = riot_get(url)
+    if "puuid" not in data:
+        raise RuntimeError(f"Account lookup failed: {data}")
     return data["puuid"]
 
 def get_summoner_by_puuid(puuid):
+    # Not strictly needed for rank anymore, but kept in case you want display name later.
     url = f"https://{PLATFORM}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
     return riot_get(url)
 
-def get_league_entries(encrypted_summoner_id):
-    url = f"https://{PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-summoner/{encrypted_summoner_id}"
+def get_league_entries_by_puuid(puuid):
+    url = f"https://{PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
     return riot_get(url)
 
 def get_ranked_solo_entry(entries):
@@ -90,7 +93,6 @@ def update_player(state, p):
     st = players.setdefault(label, {
         "riotId": f'{p["gameName"]}#{p["tagLine"]}',
         "puuid": None,
-        "summonerId": None,
         "current": None,
         "peak": None,
         "lpHistory": [],
@@ -109,18 +111,15 @@ def update_player(state, p):
         }
     })
 
-    # Resolve IDs
+    # Resolve PUUID (stable identifier)
     if not st["puuid"]:
         st["puuid"] = get_puuid(p["gameName"], p["tagLine"])
-    
-    summ = get_summoner_by_puuid(st["puuid"])
-    print("SUMMONER RESPONSE:", summ)
-    
-    st["summonerId"] = summ["id"]
 
+    # Current rank snapshot (Solo/Duo) via League-V4 by PUUID (no summonerId needed)
+    entries = get_league_entries_by_puuid(st["puuid"])
+    if not isinstance(entries, list):
+        raise RuntimeError(f"League entries lookup failed: {entries}")
 
-    # Current rank snapshot (Solo/Duo)
-    entries = get_league_entries(st["summonerId"])
     solo = get_ranked_solo_entry(entries)
 
     now_ts = int(time.time())
@@ -165,6 +164,9 @@ def update_player(state, p):
 
     # Pull recent solo/duo match IDs and process new ones only
     match_ids = get_match_ids(st["puuid"], count=20)
+    if not isinstance(match_ids, list):
+        raise RuntimeError(f"Match ID lookup failed: {match_ids}")
+
     seen = set(st["matchesSeen"])
     new_ids = [mid for mid in match_ids if mid not in seen]
     new_ids.reverse()  # oldest -> newest
@@ -193,7 +195,10 @@ def update_player(state, p):
 
         stats["totalPlaytimeSeconds"] += max(duration, 0)
 
-        c = stats["champions"].setdefault(champ_id, {"games": 0, "wins": 0, "losses": 0, "playtimeSeconds": 0})
+        c = stats["champions"].setdefault(
+            champ_id,
+            {"games": 0, "wins": 0, "losses": 0, "playtimeSeconds": 0}
+        )
         c["games"] += 1
         if win:
             c["wins"] += 1
@@ -253,4 +258,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
