@@ -1,6 +1,6 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T05:40:02.930087-05:00",
+    "iso": "2025-12-30T05:40:45.371581-05:00",
     "display": "Last Updated: 5:40AM on 12/30"
   },
   "split": {
@@ -827,7 +827,7 @@
       },
       "backfill": {
         "nextStart": 500,
-        "done": false
+        "done": true
       },
       "pendingMatchIds": []
     }
