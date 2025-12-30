@@ -2,7 +2,7 @@ name: Update Riot stats
 
 on:
   schedule:
-    - cron: "*/2 * * * *"   # recommended; change to "* * * * *" if you insist
+    - cron: "*/5 * * * *"   # recommended; change to "* * * * *" if you insist
   workflow_dispatch: {}
 
 concurrency:
