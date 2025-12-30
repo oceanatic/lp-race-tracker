@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T05:32:49.398514-05:00",
-    "display": "Last Updated: 5:32AM on 12/30"
+    "iso": "2025-12-30T05:34:19.143557-05:00",
+    "display": "Last Updated: 5:34AM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -550,17 +550,21 @@
         "NA1_5405666834",
         "NA1_5405676541",
         "NA1_5406307095",
-        "NA1_5406334189"
+        "NA1_5406334189",
+        "NA1_5406355895",
+        "NA1_5406392186",
+        "NA1_5407214420",
+        "NA1_5407231943"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 399,
+        "splitMatchesProcessed": 403,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 718474,
-        "totalPlaytimeHMS": "199:34:34",
-        "games": 399,
-        "wins": 206,
-        "losses": 193,
+        "totalPlaytimeSeconds": 726738,
+        "totalPlaytimeHMS": "201:52:18",
+        "games": 403,
+        "wins": 207,
+        "losses": 196,
         "champions": {
           "60": {
             "games": 26,
@@ -779,16 +783,16 @@
             "playtimeSeconds": 4405
           },
           "497": {
-            "games": 4,
+            "games": 5,
             "wins": 2,
-            "losses": 2,
-            "playtimeSeconds": 8151
+            "losses": 3,
+            "playtimeSeconds": 9718
           },
           "223": {
-            "games": 1,
+            "games": 2,
             "wins": 0,
-            "losses": 1,
-            "playtimeSeconds": 1765
+            "losses": 2,
+            "playtimeSeconds": 4551
           },
           "432": {
             "games": 1,
@@ -797,10 +801,16 @@
             "playtimeSeconds": 1667
           },
           "412": {
+            "games": 2,
+            "wins": 1,
+            "losses": 1,
+            "playtimeSeconds": 3018
+          },
+          "111": {
             "games": 1,
             "wins": 1,
             "losses": 0,
-            "playtimeSeconds": 1179
+            "playtimeSeconds": 2072
           }
         },
         "mostPlayedChampionId": "203",
@@ -819,12 +829,7 @@
         "nextStart": 500,
         "done": true
       },
-      "pendingMatchIds": [
-        "NA1_5407231943",
-        "NA1_5407214420",
-        "NA1_5406392186",
-        "NA1_5406355895"
-      ]
+      "pendingMatchIds": []
     }
   }
 }
