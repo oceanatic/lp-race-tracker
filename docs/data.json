@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T05:09:31.357372-05:00",
-    "display": "Last Updated: 5:09AM on 12/30"
+    "iso": "2025-12-30T05:13:30.711485-05:00",
+    "display": "Last Updated: 5:13AM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -265,17 +265,29 @@
         "NA1_5288530970",
         "NA1_5278324619",
         "NA1_5278338970",
-        "NA1_5278353769"
+        "NA1_5278353769",
+        "NA1_5288568281",
+        "NA1_5288616952",
+        "NA1_5288654670",
+        "NA1_5288683451",
+        "NA1_5288718329",
+        "NA1_5288746991",
+        "NA1_5289672565",
+        "NA1_5289690587",
+        "NA1_5292070406",
+        "NA1_5292671939",
+        "NA1_5292710375",
+        "NA1_5294791351"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 115,
+        "splitMatchesProcessed": 127,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 201074,
-        "totalPlaytimeHMS": "55:51:14",
-        "games": 115,
-        "wins": 63,
-        "losses": 52,
+        "totalPlaytimeSeconds": 224848,
+        "totalPlaytimeHMS": "62:27:28",
+        "games": 127,
+        "wins": 70,
+        "losses": 57,
         "champions": {
           "60": {
             "games": 25,
@@ -332,10 +344,10 @@
             "playtimeSeconds": 9092
           },
           "80": {
-            "games": 6,
-            "wins": 2,
-            "losses": 4,
-            "playtimeSeconds": 10785
+            "games": 10,
+            "wins": 4,
+            "losses": 6,
+            "playtimeSeconds": 19247
           },
           "254": {
             "games": 1,
@@ -404,10 +416,10 @@
             "playtimeSeconds": 1861
           },
           "106": {
-            "games": 15,
-            "wins": 10,
-            "losses": 5,
-            "playtimeSeconds": 25126
+            "games": 23,
+            "wins": 15,
+            "losses": 8,
+            "playtimeSeconds": 40438
           }
         },
         "mostPlayedChampionId": "60",
@@ -423,8 +435,8 @@
         }
       },
       "backfill": {
-        "nextStart": 0,
-        "done": false
+        "nextStart": 500,
+        "done": true
       }
     }
   }
