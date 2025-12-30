@@ -22,8 +22,8 @@ QUEUE_TYPE_SOLO = "RANKED_SOLO_5x5"
 
 OUT_PATH = "docs/data.json"
 
-# Current ranked split start (NA): 2025-08-27 19:00:00 UTC (noon PT)
-SPLIT_START_UNIX = 1756321200
+# Season tracking start: January 9, 2025 00:00 UTC
+SPLIT_START_UNIX = 1736380800
 
 # Near-real-time mode:
 # We fetch ONLY the newest page of IDs (100) and stop when we hit a seen match.
