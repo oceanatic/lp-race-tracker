@@ -2,8 +2,12 @@ name: Update Riot stats
 
 on:
   schedule:
-    - cron: "* * * * *"
+    - cron: "*/2 * * * *"   # recommended; change to "* * * * *" if you insist
   workflow_dispatch: {}
+
+concurrency:
+  group: riot-stats-update
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -19,9 +23,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install -r requirements.txt
+        # If you don't have requirements.txt, either add one with "requests"
+        # or change this back to: pip install requests
 
       - name: Run updater
         env:
@@ -35,4 +42,3 @@ jobs:
           git add docs/data.json
           git diff --cached --quiet || git commit -m "Update data.json"
           git push
-
