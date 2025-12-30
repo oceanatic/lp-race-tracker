@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T05:27:08.694408-05:00",
-    "display": "Last Updated: 5:27AM on 12/30"
+    "iso": "2025-12-30T05:28:19.743631-05:00",
+    "display": "Last Updated: 5:28AM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -338,17 +338,29 @@
         "NA1_5321462694",
         "NA1_5321491008",
         "NA1_5323724123",
-        "NA1_5323748307"
+        "NA1_5323748307",
+        "NA1_5323773356",
+        "NA1_5323807439",
+        "NA1_5325953969",
+        "NA1_5325967844",
+        "NA1_5325979703",
+        "NA1_5326012480",
+        "NA1_5326063368",
+        "NA1_5326090825",
+        "NA1_5326115267",
+        "NA1_5326860204",
+        "NA1_5327177545",
+        "NA1_5327198785"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 187,
+        "splitMatchesProcessed": 199,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 330969,
-        "totalPlaytimeHMS": "91:56:09",
-        "games": 187,
-        "wins": 97,
-        "losses": 90,
+        "totalPlaytimeSeconds": 355652,
+        "totalPlaytimeHMS": "98:47:32",
+        "games": 199,
+        "wins": 104,
+        "losses": 95,
         "champions": {
           "60": {
             "games": 25,
@@ -459,16 +471,16 @@
             "playtimeSeconds": 1772
           },
           "203": {
-            "games": 18,
-            "wins": 12,
-            "losses": 6,
-            "playtimeSeconds": 30983
+            "games": 20,
+            "wins": 13,
+            "losses": 7,
+            "playtimeSeconds": 35032
           },
           "104": {
-            "games": 24,
-            "wins": 10,
-            "losses": 14,
-            "playtimeSeconds": 43476
+            "games": 33,
+            "wins": 16,
+            "losses": 17,
+            "playtimeSeconds": 61862
           },
           "102": {
             "games": 1,
@@ -513,10 +525,10 @@
             "playtimeSeconds": 1852
           },
           "950": {
-            "games": 3,
+            "games": 4,
             "wins": 3,
-            "losses": 0,
-            "playtimeSeconds": 4602
+            "losses": 1,
+            "playtimeSeconds": 6850
           }
         },
         "mostPlayedChampionId": "106",
@@ -739,19 +751,7 @@
         "NA1_5327252694",
         "NA1_5327242772",
         "NA1_5327221255",
-        "NA1_5327207980",
-        "NA1_5327198785",
-        "NA1_5327177545",
-        "NA1_5326860204",
-        "NA1_5326115267",
-        "NA1_5326090825",
-        "NA1_5326063368",
-        "NA1_5326012480",
-        "NA1_5325979703",
-        "NA1_5325967844",
-        "NA1_5325953969",
-        "NA1_5323807439",
-        "NA1_5323773356"
+        "NA1_5327207980"
       ]
     }
   }
