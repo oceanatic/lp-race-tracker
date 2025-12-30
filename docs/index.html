@@ -6,264 +6,331 @@
   <title>LP Race Tracker</title>
   <style>
     :root{
-      --bg: #0b1020;
-      --panel: rgba(255,255,255,0.06);
-      --panel2: rgba(255,255,255,0.08);
-      --border: rgba(255,255,255,0.10);
-      --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.65);
-      --muted2: rgba(255,255,255,0.50);
-      --shadow: 0 12px 40px rgba(0,0,0,0.35);
-      --radius: 16px;
+      --ink: #0b0e14;
+      --ink2:#0f1420;
+      --paper:#f2efe8;
+      --paper2:#e8e2d4;
+
+      --gold:#d7b86a;
+      --gold2:#b79245;
+      --teal:#2bb3a3;
+      --red:#d0635e;
+
+      --text:#111827;
+      --muted:#4b5563;
+
+      --card:#ffffffcc;
+      --card2:#ffffffaa;
+      --stroke:#d7cfbf;
+      --shadow: 0 10px 30px rgba(0,0,0,0.18);
+
+      --radius: 18px;
     }
 
-    *{ box-sizing: border-box; }
+    *{ box-sizing:border-box; }
     body{
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
+
+      /* Parchment base + “ink wash” corners */
       background:
-        radial-gradient(1200px 800px at 10% 0%, rgba(121, 82, 255, 0.22), transparent 55%),
-        radial-gradient(900px 700px at 100% 10%, rgba(0, 240, 255, 0.14), transparent 60%),
-        radial-gradient(900px 600px at 60% 110%, rgba(0, 255, 136, 0.10), transparent 60%),
-        var(--bg);
+        radial-gradient(1000px 700px at 10% 0%, rgba(15,20,32,0.70), transparent 55%),
+        radial-gradient(900px 700px at 100% 10%, rgba(11,14,20,0.70), transparent 55%),
+        linear-gradient(180deg, var(--paper), var(--paper2));
+
       min-height: 100vh;
     }
 
+    /* subtle parchment texture without images */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(0,0,0,0.015) 0px,
+          rgba(0,0,0,0.015) 1px,
+          transparent 1px,
+          transparent 6px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          rgba(0,0,0,0.010) 0px,
+          rgba(0,0,0,0.010) 1px,
+          transparent 1px,
+          transparent 9px
+        );
+      mix-blend-mode:multiply;
+      opacity:0.35;
+    }
+
     .wrap{
-      max-width: 1100px;
+      max-width: 1120px;
       margin: 0 auto;
       padding: 28px 18px 60px;
     }
 
-    .header{
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 18px;
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:14px;
+      margin-bottom: 16px;
+    }
+
+    .titleBlock{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
     }
 
     h1{
-      margin: 0;
-      font-size: 26px;
-      letter-spacing: 0.2px;
-      font-weight: 720;
+      margin:0;
+      font-size: 28px;
+      letter-spacing: 0.4px;
+      font-weight: 800;
+      color: #f6f2e7;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.50);
     }
 
     .subtitle{
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 14px;
+      color: rgba(246,242,231,0.80);
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.35);
     }
 
     .updated{
-      text-align: right;
-      color: var(--muted);
+      text-align:right;
+      color: rgba(246,242,231,0.85);
       font-size: 13px;
-      line-height: 1.35;
-      white-space: nowrap;
+      line-height:1.35;
+      white-space:nowrap;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.35);
     }
 
     .grid{
-      display: grid;
+      display:grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 16px;
+      gap: 16px;
+      margin-top: 14px;
     }
-    @media (max-width: 860px){
+    @media (max-width: 900px){
       .grid{ grid-template-columns: 1fr; }
-      .updated{ text-align: left; white-space: normal; }
-      .header{ align-items: flex-start; flex-direction: column; }
+      .updated{ text-align:left; white-space:normal; }
+      .topbar{ flex-direction:column; align-items:flex-start; }
     }
 
     .card{
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, var(--panel), rgba(255,255,255,0.03));
+      position:relative;
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      border: 1px solid rgba(215, 207, 191, 0.85);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 16px;
-      position: relative;
-      overflow: hidden;
+      overflow:hidden;
     }
 
+    /* gold trim */
     .card::before{
       content:"";
       position:absolute;
-      inset: 0;
-      background: radial-gradient(600px 200px at 20% 0%, rgba(255,255,255,0.06), transparent 55%);
+      inset:0;
+      border-radius: var(--radius);
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(215,184,106,0.85), rgba(183,146,69,0.55), rgba(43,179,163,0.35));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
       pointer-events:none;
     }
 
-    .cardTop{
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 10px;
-      position: relative;
-      z-index: 1;
+    .cardInner{
+      padding: 16px;
     }
 
-    .name{
-      margin: 0;
+    .cardHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(215, 207, 191, 0.7);
+    }
+
+    .riotId{
+      margin:0;
+      font-weight: 850;
       font-size: 18px;
-      font-weight: 720;
-      letter-spacing: 0.2px;
+      letter-spacing: 0.3px;
     }
 
-    .badge{
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
       border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.05);
-      color: var(--muted);
+      border: 1px solid rgba(215, 207, 191, 0.9);
+      background: rgba(242,239,232,0.65);
+      color: #2b2f38;
       font-size: 12px;
-      white-space: nowrap;
+      white-space:nowrap;
     }
 
-    .badge strong{ color: var(--text); font-weight: 700; }
+    code{
+      background: rgba(11,14,20,0.08);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(11,14,20,0.12);
+    }
 
     .section{
-      margin-top: 14px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      padding-top: 14px;
-      position: relative;
-      z-index: 1;
+      padding-top: 12px;
     }
 
-    .kvs{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 14px;
-      margin-top: 10px;
+    .labelRow{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:baseline;
+      margin-bottom: 8px;
     }
-    @media (max-width: 520px){
+
+    .labelRow .k{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing:0.2px;
+    }
+    .labelRow .v{
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing:0.2px;
+    }
+
+    /* Progress bar: “etched” track + gold fill */
+    .bar{
+      height: 14px;
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, rgba(11,14,20,0.08), rgba(11,14,20,0.03));
+      border: 1px solid rgba(11,14,20,0.12);
+      overflow:hidden;
+      position:relative;
+    }
+    .fill{
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background:
+        linear-gradient(90deg, rgba(215,184,106,0.95), rgba(183,146,69,0.95));
+      transition: width 350ms ease;
+      position:relative;
+    }
+    .fill::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(255,255,255,0.18) 0px,
+          rgba(255,255,255,0.18) 2px,
+          transparent 2px,
+          transparent 10px
+        );
+      opacity: 0.35;
+      mix-blend-mode: overlay;
+      pointer-events:none;
+    }
+
+    .ticks{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: rgba(75,85,99,0.85);
+    }
+    .tick{
+      flex:1;
+      text-align:center;
+      position:relative;
+      padding-top: 10px;
+    }
+    .tick::before{
+      content:"";
+      position:absolute;
+      top:0;
+      left:50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 8px;
+      background: rgba(11,14,20,0.22);
+      border-radius: 2px;
+    }
+    .tick.active{
+      color: rgba(17,24,39,0.95);
+      font-weight: 800;
+    }
+    .tick.active::before{
+      background: rgba(183,146,69,0.85);
+    }
+
+    .metaLine{
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(75,85,99,0.92);
+      line-height: 1.35;
+    }
+    .metaLine b{ color: rgba(17,24,39,0.98); }
+
+    .kvs{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 560px){
       .kvs{ grid-template-columns: 1fr; }
     }
 
     .kv{
       padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      border-radius: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(11,14,20,0.10);
+      background: rgba(242,239,232,0.60);
     }
     .kv .k{
-      color: var(--muted2);
       font-size: 12px;
+      color: rgba(75,85,99,0.90);
       margin-bottom: 4px;
     }
     .kv .v{
       font-size: 14px;
-      font-weight: 650;
-      letter-spacing: 0.2px;
+      font-weight: 850;
+      letter-spacing:0.2px;
     }
 
-    /* Progress / milestones */
-    .progressWrap{
+    .footnote{
       margin-top: 10px;
-    }
-
-    .progressHeader{
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: baseline;
-      margin-bottom: 8px;
-    }
-    .progressHeader .k{
-      color: var(--muted);
       font-size: 12px;
-    }
-    .progressHeader .v{
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.15px;
-    }
-
-    .bar{
-      position: relative;
-      height: 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      overflow: hidden;
-    }
-
-    .fill{
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      background: linear-gradient(90deg,
-        rgba(0, 240, 255, 0.80),
-        rgba(121, 82, 255, 0.85),
-        rgba(0, 255, 136, 0.80)
-      );
-      transition: width 400ms ease;
-    }
-
-    .ticks{
-      position: relative;
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .tick{
-      position: relative;
-      flex: 1;
-      text-align: center;
-      padding-top: 10px;
-    }
-
-    .tick::before{
-      content:"";
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 2px;
-      height: 8px;
-      background: rgba(255,255,255,0.25);
-      border-radius: 2px;
-    }
-
-    .tick.active{
-      color: rgba(255,255,255,0.86);
-      font-weight: 650;
-    }
-
-    .note{
-      margin-top: 10px;
-      color: var(--muted2);
-      font-size: 12px;
-      line-height: 1.35;
-    }
-
-    .small{
-      font-size: 12px;
-      color: var(--muted);
-    }
-    code{
-      background: rgba(255,255,255,0.07);
-      padding: 2px 6px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.10);
-      color: rgba(255,255,255,0.82);
+      color: rgba(75,85,99,0.80);
+      line-height:1.35;
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <div class="header">
-      <div>
+    <div class="topbar">
+      <div class="titleBlock">
         <h1>LP Race Tracker</h1>
-        <div class="subtitle">NA • Solo/Duo only • Goal: Emerald</div>
+        <div class="subtitle">NA • Solo/Duo • Goal: Emerald IV (0 LP counts)</div>
       </div>
       <div class="updated" id="updated">Last Updated: …</div>
     </div>
@@ -291,15 +358,12 @@
     const dd = get("day");
     const hh = get("hour");
     const min = get("minute");
-    const dayPeriod = get("dayPeriod"); // AM/PM
+    const ap = get("dayPeriod"); // AM/PM
 
-    // e.g. 3:39AM on 12/30
-    const display = `Last Updated: ${hh}:${min}${dayPeriod} on ${mm}/${dd}`;
+    const display = `Last Updated: ${hh}:${min}${ap} on ${mm}/${dd}`;
 
-    // Relative: "3 minutes ago"
     const now = new Date();
-    const diffMs = now - dt;
-    const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+    const diffSec = Math.max(0, Math.floor((now - dt) / 1000));
 
     let rel;
     if (diffSec < 10) rel = "just now";
@@ -311,8 +375,7 @@
     return { display, rel };
   }
 
-  // --- Rank / progress math ---
-  // Milestones for "race to Emerald" (goal: Emerald IV)
+  // --- Progress / milestones (goal: Emerald IV at 0 LP) ---
   const MILESTONES = [
     { tier: "PLATINUM", div: "IV", label: "Plat IV" },
     { tier: "PLATINUM", div: "III", label: "Plat III" },
@@ -328,15 +391,13 @@
   };
   const divOrder = {"IV": 0, "III": 1, "II": 2, "I": 3};
 
-  // Convert rank to a comparable number (LP scaled so division changes dominate)
   function rankValue(tier, div, lp){
     const t = tierOrder[tier] ?? -1;
     const d = divOrder[div] ?? 0;
     const L = Number.isFinite(lp) ? lp : 0;
-    return t * 10000 + d * 1000 + L; // same idea as your python
+    return t * 10000 + d * 1000 + L;
   }
 
-  // For progress: treat each milestone as a step. Progress moves from Plat IV (0) to Emerald IV (1).
   function progressToEmerald(cur){
     if (!cur) return { pct: 0, reachedIndex: -1, curLabel: "Unranked / placements" };
 
@@ -346,13 +407,11 @@
     const goal  = MILESTONES[MILESTONES.length - 1];
 
     const startV = rankValue(start.tier, start.div, 0);
-    const goalV  = rankValue(goal.tier,  goal.div,  0);
+    const goalV  = rankValue(goal.tier,  goal.div,  0); // Emerald IV at 0 LP
 
-    // Clamp below start to 0, above goal to 1
     const raw = (curV - startV) / (goalV - startV);
     const pct = Math.max(0, Math.min(1, raw));
 
-    // Which milestone has been reached (by tier/div only; ignores LP within division)
     let reachedIndex = -1;
     for (let i = 0; i < MILESTONES.length; i++){
       const m = MILESTONES[i];
@@ -360,21 +419,15 @@
       if (curV >= mv) reachedIndex = i;
     }
 
-    const curLabel = `${cur.tier} ${cur.division} — ${cur.lp} LP`;
-    return { pct, reachedIndex, curLabel };
-  }
-
-  function pctToLabel(pct){
-    return `${Math.round(pct * 100)}%`;
+    return { pct, reachedIndex, curLabel: `${cur.tier} ${cur.division} — ${cur.lp} LP` };
   }
 
   async function load(){
     const res = await fetch("./data.json", { cache: "no-store" });
     const data = await res.json();
 
-    const updated = data?.updatedAt?.iso ?? data?.updatedAt; // support older schema
-    const { display, rel } = formatLastUpdated(updated);
-
+    const updatedIso = data?.updatedAt?.iso ?? data?.updatedAt;
+    const { display, rel } = formatLastUpdated(updatedIso);
     document.getElementById("updated").textContent = rel ? `${display} (${rel})` : display;
 
     const cards = document.getElementById("cards");
@@ -384,11 +437,11 @@
       const cur = p.current;
       const s = p.stats || {};
       const winrate = cur && cur.winrate != null ? (cur.winrate * 100).toFixed(1) + "%" : "n/a";
+      const peakText = p.peak ? `${p.peak.tier} ${p.peak.division} — ${p.peak.lp} LP` : "n/a";
 
       const prog = progressToEmerald(cur);
-      const pctStr = pctToLabel(prog.pct);
+      const pctLabel = `${Math.round(prog.pct * 100)}%`;
 
-      // Milestone tick labels + active highlighting
       const ticksHtml = MILESTONES.map((m, i) => {
         const cls = (i <= prog.reachedIndex) ? "tick active" : "tick";
         return `<div class="${cls}">${m.label}</div>`;
@@ -396,74 +449,68 @@
 
       const card = document.createElement("div");
       card.className = "card";
-
-      const peakText = p.peak ? `${p.peak.tier} ${p.peak.division} — ${p.peak.lp} LP` : "n/a";
-
       card.innerHTML = `
-        <div class="cardTop">
-          <h2 class="name">${p.riotId}</h2>
-          <div class="badge">Key: <strong><code>${key}</code></strong></div>
-        </div>
-
-        <div class="section">
-          <div class="progressHeader">
-            <div class="k">Progress to Emerald IV</div>
-            <div class="v">${pctStr}</div>
+        <div class="cardInner">
+          <div class="cardHeader">
+            <h2 class="riotId">${p.riotId}</h2>
+            <div class="pill">Key: <b><code>${key}</code></b></div>
           </div>
 
-          <div class="bar" aria-label="progress">
-            <div class="fill" style="width:${(prog.pct*100).toFixed(2)}%"></div>
-          </div>
+          <div class="section">
+            <div class="labelRow">
+              <div class="k">Race Progress</div>
+              <div class="v">${pctLabel}</div>
+            </div>
+            <div class="bar"><div class="fill" style="width:${(prog.pct*100).toFixed(2)}%"></div></div>
+            <div class="ticks">${ticksHtml}</div>
 
-          <div class="ticks">${ticksHtml}</div>
-
-          <div class="note small">
-            Current: <b>${cur ? prog.curLabel : "Unranked / placements"}</b> • Peak (since tracking): <b>${peakText}</b>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="kvs">
-            <div class="kv">
-              <div class="k">Games (Solo/Duo)</div>
-              <div class="v">${cur ? cur.games : (s.games ?? 0)} (W ${cur ? cur.wins : (s.wins ?? 0)} / L ${cur ? cur.losses : (s.losses ?? 0)})</div>
-            </div>
-            <div class="kv">
-              <div class="k">Overall winrate</div>
-              <div class="v">${winrate}</div>
-            </div>
-            <div class="kv">
-              <div class="k">Total playtime (tracked)</div>
-              <div class="v">${s.totalPlaytimeHMS || "0:00:00"}</div>
-            </div>
-            <div class="kv">
-              <div class="k">Most played champ (ID)</div>
-              <div class="v">${s.mostPlayedChampionId ?? "n/a"}</div>
-            </div>
-            <div class="kv">
-              <div class="k">Highest WR champ (min 5 games)</div>
-              <div class="v">${s.highestWinrateChampionId ?? "n/a"}${s.highestWinrateChampionWR != null ? ` • ${(s.highestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
-            </div>
-            <div class="kv">
-              <div class="k">Lowest WR champ (min 5 games)</div>
-              <div class="v">${s.lowestWinrateChampionId ?? "n/a"}${s.lowestWinrateChampionWR != null ? ` • ${(s.lowestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
+            <div class="metaLine">
+              Current: <b>${cur ? prog.curLabel : "Unranked / placements"}</b><br/>
+              Peak (since tracking): <b>${peakText}</b>
             </div>
           </div>
 
-          <div class="note">
-            LP deltas are best-effort. Dodges, remakes, promos, and multi-game gaps can skew “average LP gain/loss.”
+          <div class="section">
+            <div class="kvs">
+              <div class="kv">
+                <div class="k">Games (Solo/Duo)</div>
+                <div class="v">${cur ? cur.games : (s.games ?? 0)} (W ${cur ? cur.wins : (s.wins ?? 0)} / L ${cur ? cur.losses : (s.losses ?? 0)})</div>
+              </div>
+              <div class="kv">
+                <div class="k">Overall winrate</div>
+                <div class="v">${winrate}</div>
+              </div>
+              <div class="kv">
+                <div class="k">Total playtime (tracked)</div>
+                <div class="v">${s.totalPlaytimeHMS || "0:00:00"}</div>
+              </div>
+              <div class="kv">
+                <div class="k">Most played champ (ID)</div>
+                <div class="v">${s.mostPlayedChampionId ?? "n/a"}</div>
+              </div>
+              <div class="kv">
+                <div class="k">Highest WR champ (min 5 games)</div>
+                <div class="v">${s.highestWinrateChampionId ?? "n/a"}${s.highestWinrateChampionWR != null ? ` • ${(s.highestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
+              </div>
+              <div class="kv">
+                <div class="k">Lowest WR champ (min 5 games)</div>
+                <div class="v">${s.lowestWinrateChampionId ?? "n/a"}${s.lowestWinrateChampionWR != null ? ` • ${(s.lowestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
+              </div>
+            </div>
+
+            <div class="footnote">
+              LP deltas are best-effort. Dodges/remakes/promos and multi-game gaps can skew “average LP gain/loss.”
+            </div>
           </div>
         </div>
       `;
-
       cards.appendChild(card);
     }
 
-    // Update the relative time label every 10 seconds without refetching
-    // (The underlying data refresh is handled by your Actions schedule.)
+    // Update the "(x minutes ago)" every 10s without refetching
     setInterval(() => {
-      const updated2 = data?.updatedAt?.iso ?? data?.updatedAt;
-      const { display: d2, rel: r2 } = formatLastUpdated(updated2);
+      const updatedIso2 = data?.updatedAt?.iso ?? data?.updatedAt;
+      const { display: d2, rel: r2 } = formatLastUpdated(updatedIso2);
       document.getElementById("updated").textContent = r2 ? `${d2} (${r2})` : d2;
     }, 10000);
   }
