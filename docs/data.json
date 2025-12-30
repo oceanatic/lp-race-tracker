@@ -675,8 +675,8 @@
             "playtimeSeconds": 5377
           },
           "203": {
-            "games": 105,
-            "wins": 60,
+            "games": 104,
+            "wins": 59,
             "losses": 45,
             "playtimeSeconds": 193140
           },
@@ -723,8 +723,8 @@
             "playtimeSeconds": 1706
           },
           "56": {
-            "games": 6,
-            "wins": 2,
+            "games": 5,
+            "wins": 1,
             "losses": 4,
             "playtimeSeconds": 9796
           },
