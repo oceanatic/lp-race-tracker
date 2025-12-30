@@ -236,7 +236,7 @@
       position:relative;
     }
 
-    /* segmented ticks inside the bar (5 milestones => 4 segments, we use 5 slots visually) */
+    /* segmented ticks inside the bar (5 milestones => 5 slots visually) */
     .track::before{
       content:"";
       position:absolute;
@@ -349,7 +349,70 @@
   </div>
 
 <script>
-  // --- Time formatting (America/New_York) ---
+  // ---------------------------
+  // Champion ID -> Name mapping
+  // ---------------------------
+  // Loads Data Dragon champion.json, then exposes champName(id).
+  // This stays entirely in index.html.
+  const CHAMPION_CACHE_KEY = "champMap_v1";
+  const CHAMPION_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+  let CHAMP_ID_TO_NAME = {};
+
+  async function loadChampionMap(){
+    // Try localStorage cache first
+    try{
+      const raw = localStorage.getItem(CHAMPION_CACHE_KEY);
+      if (raw){
+        const cached = JSON.parse(raw);
+        if (cached && cached.ts && cached.data && (Date.now() - cached.ts) < CHAMPION_CACHE_TTL_MS){
+          CHAMP_ID_TO_NAME = cached.data;
+          return;
+        }
+      }
+    }catch(_){}
+
+    // Find the latest Data Dragon version
+    let version = null;
+    try{
+      const verRes = await fetch("https://ddragon.leagueoflegends.com/api/versions.json", { cache: "no-store" });
+      const versions = await verRes.json();
+      version = Array.isArray(versions) ? versions[0] : null;
+    }catch(_){}
+
+    // Fallback version if version endpoint fails
+    if (!version) version = "14.1.1";
+
+    // Fetch champion list and build id -> name
+    const url = `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`;
+    const champRes = await fetch(url, { cache: "no-store" });
+    const champJson = await champRes.json();
+
+    const map = {};
+    const champs = champJson?.data || {};
+    for (const key of Object.keys(champs)){
+      const c = champs[key];
+      // c.key is numeric string id
+      if (c && c.key && c.name){
+        map[String(c.key)] = c.name;
+      }
+    }
+    CHAMP_ID_TO_NAME = map;
+
+    // Save to cache
+    try{
+      localStorage.setItem(CHAMPION_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: map }));
+    }catch(_){}
+  }
+
+  function champName(id){
+    if (id == null) return "n/a";
+    const k = String(id);
+    return CHAMP_ID_TO_NAME[k] || k; // fallback to the id if missing
+  }
+
+  // ---------------------------
+  // Time formatting (America/New_York)
+  // ---------------------------
   function formatLastUpdated(isoString){
     if (!isoString) return { display: "Last Updated: unknown", rel: "" };
 
@@ -385,7 +448,9 @@
     return { display, rel };
   }
 
-  // --- Rank model ---
+  // ---------------------------
+  // Rank model
+  // ---------------------------
   const tierOrder = {
     "IRON": 0, "BRONZE": 1, "SILVER": 2, "GOLD": 3,
     "PLATINUM": 4, "EMERALD": 5, "DIAMOND": 6,
@@ -400,9 +465,10 @@
     return t * 10000 + d * 1000 + L;
   }
 
-  // --- Progress bar definitions (stacked) ---
+  // ---------------------------
+  // Progress bar definitions (stacked)
+  // ---------------------------
   // Each bar is "from X4 @ 0 LP" to "nextTier4 @ 0 LP"
-  // Milestones are the 4 divisions in the destination tier, ending at Tier IV (0 LP).
   const BARS = [
     {
       title: "Progress to Gold",
@@ -418,7 +484,7 @@
     },
     {
       title: "Progress to Platinum",
-      start: { tier: "GOLD",   div: "IV", lp: 0 },
+      start: { tier: "GOLD", div: "IV", lp: 0 },
       end:   { tier: "PLATINUM", div: "IV", lp: 0 },
       milestones: [
         { tier: "GOLD", div:"IV", label:"G4" },
@@ -442,10 +508,6 @@
     },
   ];
 
-  // For a given bar, compute fill:
-  // - if player below bar.start => 0
-  // - if player above/equal bar.end => 1
-  // - else linear between start and end using rankValue
   function computeBarProgress(cur, bar){
     if (!cur) return { pct: 0, reachedIndex: -1 };
 
@@ -474,6 +536,9 @@
   }
 
   async function load(){
+    // Load champion mapping BEFORE rendering cards
+    await loadChampionMap();
+
     const res = await fetch("./data.json", { cache: "no-store" });
     const data = await res.json();
 
@@ -545,16 +610,16 @@
               <div class="v">${s.totalPlaytimeHMS || "0:00:00"}</div>
             </div>
             <div class="tile">
-              <div class="k">Most played champ (ID)</div>
-              <div class="v">${s.mostPlayedChampionId ?? "n/a"}</div>
+              <div class="k">Most played champ</div>
+              <div class="v">${champName(s.mostPlayedChampionId)}</div>
             </div>
             <div class="tile">
               <div class="k">Highest WR champ (min 5 games)</div>
-              <div class="v">${s.highestWinrateChampionId ?? "n/a"}${s.highestWinrateChampionWR != null ? ` • ${(s.highestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
+              <div class="v">${s.highestWinrateChampionId != null ? champName(s.highestWinrateChampionId) : "n/a"}${s.highestWinrateChampionWR != null ? ` • ${(s.highestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
             </div>
             <div class="tile">
               <div class="k">Lowest WR champ (min 5 games)</div>
-              <div class="v">${s.lowestWinrateChampionId ?? "n/a"}${s.lowestWinrateChampionWR != null ? ` • ${(s.lowestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
+              <div class="v">${s.lowestWinrateChampionId != null ? champName(s.lowestWinrateChampionId) : "n/a"}${s.lowestWinrateChampionWR != null ? ` • ${(s.lowestWinrateChampionWR*100).toFixed(1)}%` : ""}</div>
             </div>
           </div>
 
