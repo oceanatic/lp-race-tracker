@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, json, time, urllib.parse
+import os, json, time, urllib.parse, random
 import requests
 from datetime import datetime, timezone
 
@@ -27,13 +27,44 @@ SPLIT_START_UNIX = 1756321200
 # Match backfill controls (split-wide stats)
 MATCH_PAGE_SIZE = 100           # match-v5 max per request
 MAX_SPLIT_MATCHES = 4000        # safety cap
-MAX_MATCH_DETAILS_PER_RUN = 75  # avoid rate limits while catching up
+MAX_MATCH_DETAILS_PER_RUN = 30  # avoid rate limits while catching up (75 was too aggressive)
 
-def riot_get(url, params=None):
+def riot_get(url, params=None, max_retries=6):
     headers = {"X-Riot-Token": RIOT_API_KEY}
-    r = requests.get(url, headers=headers, params=params, timeout=30)
-    r.raise_for_status()
-    return r.json()
+
+    last = None
+    for attempt in range(max_retries):
+        r = requests.get(url, headers=headers, params=params, timeout=30)
+        last = r
+
+        if r.status_code == 200:
+            return r.json()
+
+        # Rate limited
+        if r.status_code == 429:
+            retry_after = r.headers.get("Retry-After")
+            if retry_after is not None:
+                sleep_s = float(retry_after)
+            else:
+                sleep_s = min(60.0, (2 ** attempt) + random.random())
+            time.sleep(sleep_s)
+            continue
+
+        # Transient server issues
+        if r.status_code in (500, 502, 503, 504):
+            sleep_s = min(30.0, (2 ** attempt) + random.random())
+            time.sleep(sleep_s)
+            continue
+
+        # Hard failure: wrong key, forbidden, bad request, etc.
+        r.raise_for_status()
+
+    # Exhausted retries
+    if last is not None:
+        raise requests.HTTPError(
+            f"Failed after retries ({max_retries}) for {url}: {last.status_code} {last.text[:200]}"
+        )
+    raise requests.HTTPError(f"Failed after retries ({max_retries}) for {url}")
 
 def rank_value(tier, division, lp):
     tier_order = {
@@ -239,7 +270,13 @@ def update_player(state, p):
     # Process matches
     new_match_results = []  # store (matchId, win) for LP delta attribution
     for mid in new_ids:
-        m = get_match(mid)
+        try:
+            m = get_match(mid)
+        except requests.HTTPError as e:
+            # Skip this match for now; do NOT mark as seen.
+            print(f"Skipping match due to HTTPError: {mid} -> {e}")
+            continue
+
         info = m.get("info", {})
         participants = info.get("participants", [])
         me = next((x for x in participants if x.get("puuid") == st["puuid"]), None)
