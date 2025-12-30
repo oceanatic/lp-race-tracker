@@ -21,6 +21,14 @@ QUEUE_TYPE_SOLO = "RANKED_SOLO_5x5"
 
 OUT_PATH = "docs/data.json"
 
+# Current ranked split start (NA): 2025-08-27 19:00:00 UTC (noon PT)
+SPLIT_START_UNIX = 1756321200
+
+# Match backfill controls (split-wide stats)
+MATCH_PAGE_SIZE = 100           # match-v5 max per request
+MAX_SPLIT_MATCHES = 4000        # safety cap
+MAX_MATCH_DETAILS_PER_RUN = 75  # avoid rate limits while catching up
+
 def riot_get(url, params=None):
     headers = {"X-Riot-Token": RIOT_API_KEY}
     r = requests.get(url, headers=headers, params=params, timeout=30)
@@ -71,9 +79,11 @@ def get_ranked_solo_entry(entries):
             return e
     return None
 
-def get_match_ids(puuid, start=0, count=20):
+def get_match_ids(puuid, start=0, count=20, start_time=None):
     url = f"https://{REGIONAL}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
     params = {"queue": QUEUE_RANKED_SOLO, "start": start, "count": count}
+    if start_time is not None:
+        params["startTime"] = int(start_time)
     return riot_get(url, params=params)
 
 def get_match(match_id):
@@ -162,14 +172,30 @@ def update_player(state, p):
         cur_lp = int(st["lpHistory"][-1]["lp"])
         lp_delta = cur_lp - prev_lp
 
-    # Pull recent solo/duo match IDs and process new ones only
-    match_ids = get_match_ids(st["puuid"], count=20)
-    if not isinstance(match_ids, list):
-        raise RuntimeError(f"Match ID lookup failed: {match_ids}")
+    # Pull ALL solo/duo match IDs since split start (paginated), then process new ones only
+    all_ids = []
+    start = 0
+    while len(all_ids) < MAX_SPLIT_MATCHES:
+        batch = get_match_ids(
+            st["puuid"],
+            start=start,
+            count=MATCH_PAGE_SIZE,
+            start_time=SPLIT_START_UNIX
+        )
+        if not isinstance(batch, list) or not batch:
+            break
+        all_ids.extend(batch)
+        start += len(batch)
+        if len(batch) < MATCH_PAGE_SIZE:
+            break
 
     seen = set(st["matchesSeen"])
-    new_ids = [mid for mid in match_ids if mid not in seen]
+    new_ids = [mid for mid in all_ids if mid not in seen]
     new_ids.reverse()  # oldest -> newest
+
+    # Avoid rate limits while catching up
+    if len(new_ids) > MAX_MATCH_DETAILS_PER_RUN:
+        new_ids = new_ids[:MAX_MATCH_DETAILS_PER_RUN]
 
     stats = st["stats"]
 
@@ -223,12 +249,13 @@ def update_player(state, p):
 
     MIN_GAMES_FOR_BEST_WORST = 5
     eligible = [r for r in champ_rows if r[1] >= MIN_GAMES_FOR_BEST_WORST and r[3] is not None]
-    if eligible:
+    if len(eligible) >= 2:
         best = max(eligible, key=lambda x: x[3])
         worst = min(eligible, key=lambda x: x[3])
         stats["highestWinrateChampionId"] = best[0]
         stats["lowestWinrateChampionId"] = worst[0]
     else:
+        # Not enough champions with meaningful sample size yet
         stats["highestWinrateChampionId"] = None
         stats["lowestWinrateChampionId"] = None
 
