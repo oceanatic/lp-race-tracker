@@ -354,6 +354,13 @@ def update_player(state, p):
     losses = stats["lpDelta"]["losses"]
     stats["avgLpGainPerWin"] = (sum(wins) / len(wins)) if wins else None
     stats["avgLpLossPerLoss"] = (sum(losses) / len(losses)) if losses else None
+    print(f"[{label}] SOLO ladder games now={lgames if solo else 'n/a'} W={lwins if solo else 'n/a'} L={llosses if solo else 'n/a'}")
+    print(f"[{label}] seen={len(st['matchesSeen'])}")
+    
+    print(f"[{label}] fetched_ids={len(recent_ids)} newest={recent_ids[0] if recent_ids else None}")
+    print(f"[{label}] newest_is_seen={(recent_ids and recent_ids[0] in seen)}")
+    print(f"[{label}] new_ids_detected={len(new_ids)}")
+
 
 def main():
     state = load_state()
