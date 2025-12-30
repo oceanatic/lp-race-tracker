@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T16:16:53.371484-05:00",
-    "display": "Last Updated: 4:16PM on 12/30"
+    "iso": "2025-12-30T17:27:40.323267-05:00",
+    "display": "Last Updated: 5:27PM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -117,7 +117,9 @@
         "nextStart": 100,
         "done": true
       },
-      "pendingMatchIds": []
+      "pendingMatchIds": [],
+      "platform": null,
+      "summonerId": null
     },
     "mikebeastem": {
       "riotId": "mikebeastem#MRD",
@@ -829,7 +831,9 @@
         "nextStart": 500,
         "done": true
       },
-      "pendingMatchIds": []
+      "pendingMatchIds": [],
+      "platform": null,
+      "summonerId": null
     }
   }
 }
