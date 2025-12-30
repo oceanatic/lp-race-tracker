@@ -112,8 +112,12 @@ def update_player(state, p):
     # Resolve IDs
     if not st["puuid"]:
         st["puuid"] = get_puuid(p["gameName"], p["tagLine"])
+    
     summ = get_summoner_by_puuid(st["puuid"])
+    print("SUMMONER RESPONSE:", summ)
+    
     st["summonerId"] = summ["id"]
+
 
     # Current rank snapshot (Solo/Duo)
     entries = get_league_entries(st["summonerId"])
