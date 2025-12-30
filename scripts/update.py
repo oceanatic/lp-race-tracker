@@ -48,7 +48,15 @@ def load_state():
     if os.path.exists(OUT_PATH):
         with open(OUT_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
-    return {"updatedAt": None, "players": {}}
+    return {
+        "updatedAt": None,
+        "split": {
+            "queue": QUEUE_RANKED_SOLO,
+            "queueType": QUEUE_TYPE_SOLO,
+            "startUnix": SPLIT_START_UNIX
+        },
+        "players": {}
+    }
 
 def save_state(state):
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
@@ -103,18 +111,37 @@ def update_player(state, p):
     st = players.setdefault(label, {
         "riotId": f'{p["gameName"]}#{p["tagLine"]}',
         "puuid": None,
-        "current": None,
+
+        # League (authoritative ladder state)
+        "current": None,        # rank/LP snapshot
+        "leagueRecord": None,   # wins/losses/games/winrate from League-V4
+
+        # Peak/History (rank/LP snapshots)
         "peak": None,
         "lpHistory": [],
+
+        # Match-derived split stats
         "matchesSeen": [],
         "stats": {
+            # Backfill transparency
+            "splitMatchIdsFound": 0,
+            "splitMatchesProcessed": 0,
+            "splitBackfillRemaining": 0,
+
+            # Split aggregates (from processed Match-V5 matches)
             "totalPlaytimeSeconds": 0,
             "totalPlaytimeHMS": "0:00:00",
             "games": 0, "wins": 0, "losses": 0,
+
             "champions": {},
             "mostPlayedChampionId": None,
             "highestWinrateChampionId": None,
             "lowestWinrateChampionId": None,
+
+            # Optional: expose WR values so it doesn't look "random"
+            "highestWinrateChampionWR": None,
+            "lowestWinrateChampionWR": None,
+
             "avgLpGainPerWin": None,
             "avgLpLossPerLoss": None,
             "lpDelta": {"wins": [], "losses": []},
@@ -125,7 +152,7 @@ def update_player(state, p):
     if not st["puuid"]:
         st["puuid"] = get_puuid(p["gameName"], p["tagLine"])
 
-    # Current rank snapshot (Solo/Duo) via League-V4 by PUUID (no summonerId needed)
+    # Current rank snapshot (Solo/Duo) via League-V4 by PUUID
     entries = get_league_entries_by_puuid(st["puuid"])
     if not isinstance(entries, list):
         raise RuntimeError(f"League entries lookup failed: {entries}")
@@ -139,19 +166,23 @@ def update_player(state, p):
         tier = solo.get("tier")
         div = solo.get("rank")
         lp = int(solo.get("leaguePoints", 0))
-        wins = int(solo.get("wins", 0))
-        losses = int(solo.get("losses", 0))
-        games = wins + losses
-        winrate = (wins / games) if games else None
+        lwins = int(solo.get("wins", 0))
+        llosses = int(solo.get("losses", 0))
+        lgames = lwins + llosses
+        lwinrate = (lwins / lgames) if lgames else None
 
         st["current"] = {
             "tier": tier, "division": div, "lp": lp,
-            "wins": wins, "losses": losses, "games": games,
-            "winrate": winrate
+            "wins": lwins, "losses": llosses, "games": lgames,
+            "winrate": lwinrate
+        }
+        st["leagueRecord"] = {
+            "wins": lwins, "losses": llosses, "games": lgames, "winrate": lwinrate
         }
         snap.update({"tier": tier, "division": div, "lp": lp})
     else:
         st["current"] = None
+        st["leagueRecord"] = None
 
     # LP history snapshot (append if changed)
     if "tier" in snap:
@@ -172,7 +203,7 @@ def update_player(state, p):
         cur_lp = int(st["lpHistory"][-1]["lp"])
         lp_delta = cur_lp - prev_lp
 
-    # Pull ALL solo/duo match IDs since split start (paginated), then process new ones only
+    # Pull ALL solo/duo match IDs since split start (paginated)
     all_ids = []
     start = 0
     while len(all_ids) < MAX_SPLIT_MATCHES:
@@ -189,6 +220,14 @@ def update_player(state, p):
         if len(batch) < MATCH_PAGE_SIZE:
             break
 
+    stats = st["stats"]
+
+    # Backfill transparency
+    stats["splitMatchIdsFound"] = len(all_ids)
+    stats["splitMatchesProcessed"] = len(st["matchesSeen"])
+    stats["splitBackfillRemaining"] = max(0, len(all_ids) - len(st["matchesSeen"]))
+
+    # Process new match IDs only
     seen = set(st["matchesSeen"])
     new_ids = [mid for mid in all_ids if mid not in seen]
     new_ids.reverse()  # oldest -> newest
@@ -196,8 +235,6 @@ def update_player(state, p):
     # Avoid rate limits while catching up
     if len(new_ids) > MAX_MATCH_DETAILS_PER_RUN:
         new_ids = new_ids[:MAX_MATCH_DETAILS_PER_RUN]
-
-    stats = st["stats"]
 
     # Process matches
     new_match_results = []  # store (matchId, win) for LP delta attribution
@@ -235,6 +272,10 @@ def update_player(state, p):
         st["matchesSeen"].append(mid)
         new_match_results.append((mid, win))
 
+    # Update backfill transparency after appending new matches
+    stats["splitMatchesProcessed"] = len(st["matchesSeen"])
+    stats["splitBackfillRemaining"] = max(0, len(all_ids) - len(st["matchesSeen"]))
+
     # Derived champ stats
     champs = stats["champions"]
     champ_rows = []
@@ -250,14 +291,18 @@ def update_player(state, p):
     MIN_GAMES_FOR_BEST_WORST = 5
     eligible = [r for r in champ_rows if r[1] >= MIN_GAMES_FOR_BEST_WORST and r[3] is not None]
     if len(eligible) >= 2:
-        best = max(eligible, key=lambda x: x[3])
-        worst = min(eligible, key=lambda x: x[3])
+        # Tie-break so it doesn't look like "most played == best"
+        best = max(eligible, key=lambda r: (r[3], r[1]))    # higher WR, then more games
+        worst = min(eligible, key=lambda r: (r[3], -r[1]))  # lower WR, then more games
         stats["highestWinrateChampionId"] = best[0]
         stats["lowestWinrateChampionId"] = worst[0]
+        stats["highestWinrateChampionWR"] = best[3]
+        stats["lowestWinrateChampionWR"] = worst[3]
     else:
-        # Not enough champions with meaningful sample size yet
         stats["highestWinrateChampionId"] = None
         stats["lowestWinrateChampionId"] = None
+        stats["highestWinrateChampionWR"] = None
+        stats["lowestWinrateChampionWR"] = None
 
     # Playtime formatted
     stats["totalPlaytimeHMS"] = seconds_to_hms(stats["totalPlaytimeSeconds"])
@@ -278,6 +323,8 @@ def update_player(state, p):
 
 def main():
     state = load_state()
+    # Ensure split metadata exists even if file already existed
+    state.setdefault("split", {"queue": QUEUE_RANKED_SOLO, "queueType": QUEUE_TYPE_SOLO, "startUnix": SPLIT_START_UNIX})
     for p in PLAYERS:
         update_player(state, p)
     state["updatedAt"] = datetime.now(timezone.utc).isoformat()
