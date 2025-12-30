@@ -815,9 +815,9 @@
         },
         "mostPlayedChampionId": "203",
         "highestWinrateChampionId": "113",
-        "lowestWinrateChampionId": "517",
+        "lowestWinrateChampionId": "56",
         "highestWinrateChampionWR": 0.8181818181818182,
-        "lowestWinrateChampionWR": 0.2857142857142857,
+        "lowestWinrateChampionWR": 0.20,
         "avgLpGainPerWin": null,
         "avgLpLossPerLoss": null,
         "lpDelta": {
