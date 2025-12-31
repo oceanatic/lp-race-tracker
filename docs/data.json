@@ -11,7 +11,7 @@
   "players": {
     "mentallyunhinged": {
       "riotId": "mentallyunhinged#0626",
-      "puuid": "sJYQP1RtCYlZDTC41lUCeAYxTfmVTPgAmR0kPRvtgT1l-m3g0_vUVj_9tbpMOfgFY1ackzYszgiC-w",
+      "puuid": null,
       "current": {
         "tier": "PLATINUM",
         "division": "IV",
@@ -123,7 +123,7 @@
     },
     "mikebeastem": {
       "riotId": "mikebeastem#MRD",
-      "puuid": "uWC_pQuT2lPE354bSNwrDUNgdvfxiG9U2HiMdfNTNHPbyxHPzDIcKdg1CDAZ7KHmAgQLwJSJy2nGDQ",
+      "puuid": null,
       "current": {
         "tier": "PLATINUM",
         "division": "IV",
