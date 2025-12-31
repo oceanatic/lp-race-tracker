@@ -4,18 +4,15 @@ import requests
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-RIOT_API_KEY = os.environ["RIOT_API_KEY"]
+RIOT_API_KEY = os.environ["RIOT_API_KEY"].strip()
 
+# Both players are NA:
+# - platform routing for league-v4/summoner-v4: na1
+# - regional routing for account-v1/match-v5: americas
 PLAYERS = [
-    {"label": "mentallyunhinged", "gameName": "mentallyunhinged", "tagLine": "0626"},
-    {"label": "mikebeastem", "gameName": "mikebeastem", "tagLine": "MRD"},
+  {"label":"mentallyunhinged","gameName":"mentallyunhinged","tagLine":"0626","platform":"na1","regional":"americas"},
+  {"label":"mikebeastem","gameName":"mikebeastem","tagLine":"MRD","platform":"na1","regional":"americas"},
 ]
-
-# Routing:
-# - account-v1 and match-v5: regional routing (AMERICAS for NA)
-# - league-v4: platform routing (NA1 for NA)
-REGIONAL = "americas"
-PLATFORM = "na1"
 
 QUEUE_RANKED_SOLO = 420
 QUEUE_TYPE_SOLO = "RANKED_SOLO_5x5"
@@ -30,7 +27,7 @@ MATCH_PAGE_SIZE = 100                 # match-v5 max per request
 MAX_MATCH_DETAILS_PER_RUN = 40        # cap match detail fetches per run (prevents 429 spam)
 RATE_LIMIT_HIT_LIMIT = 2              # if we hit 429 this many times in a run, stop early
 
-# Backfill tuning (to catch up to large histories like Mike's 551 games)
+# Backfill tuning (to catch up to large histories)
 BACKFILL_PAGES_PER_RUN = 7            # scan N pages of IDs per run while backfilling (N*100 IDs scanned)
 STOP_BACKFILL_ON_FIRST_SEEN = True    # optional optimization
 
@@ -63,6 +60,12 @@ def riot_get(url, params=None, max_retries=6):
             continue
 
         # Hard failure: wrong key, forbidden, bad request, etc.
+        # Helpful diagnostics in CI logs:
+        try:
+            body_preview = (r.text or "")[:300]
+        except Exception:
+            body_preview = "<unreadable body>"
+        print(f"[riot_get] {r.status_code} {url} params={params} body={body_preview}")
         r.raise_for_status()
 
     if last is not None:
@@ -103,18 +106,18 @@ def save_state(state):
         json.dump(state, f, indent=2, ensure_ascii=False)
 
 
-def get_puuid(gameName, tagLine):
+def get_puuid(gameName, tagLine, regional):
     gn = urllib.parse.quote(gameName)
     tl = urllib.parse.quote(tagLine)
-    url = f"https://{REGIONAL}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gn}/{tl}"
+    url = f"https://{regional}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gn}/{tl}"
     data = riot_get(url)
     if "puuid" not in data:
         raise RuntimeError(f"Account lookup failed: {data}")
     return data["puuid"]
 
 
-def get_league_entries_by_puuid(puuid):
-    url = f"https://{PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
+def get_league_entries_by_puuid(puuid, platform):
+    url = f"https://{platform}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
     return riot_get(url)
 
 
@@ -125,16 +128,16 @@ def get_ranked_solo_entry(entries):
     return None
 
 
-def get_match_ids(puuid, start=0, count=20, start_time=None):
-    url = f"https://{REGIONAL}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
+def get_match_ids(puuid, regional, start=0, count=20, start_time=None):
+    url = f"https://{regional}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
     params = {"queue": QUEUE_RANKED_SOLO, "start": start, "count": count}
     if start_time is not None:
         params["startTime"] = int(start_time)
     return riot_get(url, params=params)
 
 
-def get_match(match_id):
-    url = f"https://{REGIONAL}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+def get_match(match_id, regional):
+    url = f"https://{regional}.api.riotgames.com/lol/match/v5/matches/{match_id}"
     return riot_get(url)
 
 
@@ -148,6 +151,9 @@ def seconds_to_hms(total):
 
 def update_player(state, p):
     label = p["label"]
+    platform = p["platform"]
+    regional = p["regional"]
+
     players = state.setdefault("players", {})
     st = players.setdefault(label, {
         "riotId": f'{p["gameName"]}#{p["tagLine"]}',
@@ -164,7 +170,7 @@ def update_player(state, p):
         # Match-derived split stats (incremental)
         "matchesSeen": [],
 
-        # NEW: persistent queue of match IDs we discovered but haven't processed yet
+        # Persistent queue of match IDs we discovered but haven't processed yet
         "pendingMatchIds": [],
 
         # Backfill cursor/state
@@ -201,10 +207,10 @@ def update_player(state, p):
 
     # Resolve PUUID
     if not st["puuid"]:
-        st["puuid"] = get_puuid(p["gameName"], p["tagLine"])
+        st["puuid"] = get_puuid(p["gameName"], p["tagLine"], regional)
 
     # Current rank snapshot (Solo/Duo)
-    entries = get_league_entries_by_puuid(st["puuid"])
+    entries = get_league_entries_by_puuid(st["puuid"], platform)
     if not isinstance(entries, list):
         raise RuntimeError(f"League entries lookup failed: {entries}")
 
@@ -273,7 +279,7 @@ def update_player(state, p):
     if not backfill.get("done", False):
         while pages_scanned < BACKFILL_PAGES_PER_RUN:
             start = int(backfill.get("nextStart", 0))
-            ids = get_match_ids(st["puuid"], start=start, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
+            ids = get_match_ids(st["puuid"], regional, start=start, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
             if not isinstance(ids, list):
                 raise RuntimeError(f"Match ID lookup failed: {ids}")
 
@@ -295,14 +301,12 @@ def update_player(state, p):
             # Advance cursor
             backfill["nextStart"] = start + MATCH_PAGE_SIZE
 
-            # If we’re near the end of history (short page), keep going; next call will confirm done.
             # If optimization enabled, stop scanning when overlap is detected to save requests.
             if STOP_BACKFILL_ON_FIRST_SEEN and intersects_seen:
                 break
 
     # 2) Realtime: even if backfill is done, always check newest page and enqueue new matches
-    # (This keeps the tracker live while backfill continues or after it completes.)
-    recent_ids = get_match_ids(st["puuid"], start=0, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
+    recent_ids = get_match_ids(st["puuid"], regional, start=0, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
     if not isinstance(recent_ids, list):
         raise RuntimeError(f"Match ID lookup failed: {recent_ids}")
 
@@ -314,18 +318,9 @@ def update_player(state, p):
             pending_set.add(mid)
 
     # 3) Process from pending, oldest->newest, capped
-    # Riot returns newest->oldest; pending likely has a mix. We sort by rough age using list position:
-    # simplest reliable approach: process the oldest items in pending by taking from the end if
-    # we keep appending newest first. However our enqueue loops append in API order (newest->oldest),
-    # and we may append many pages. To ensure oldest->newest, just reverse a copy and take from that,
-    # while removing processed from pending.
-    #
-    # Practical approach: process the *oldest* by taking from the end of the list.
-    # This converges correctly and stabilizes LP deltas attribution too.
     to_process = []
     while pending and len(to_process) < MAX_MATCH_DETAILS_PER_RUN:
         to_process.append(pending.pop())  # oldest-ish
-        # keep pending_set in sync
         pending_set.discard(to_process[-1])
 
     rate_limit_hits = 0
@@ -333,7 +328,7 @@ def update_player(state, p):
 
     for mid in to_process:
         try:
-            m = get_match(mid)
+            m = get_match(mid, regional)
         except requests.HTTPError as e:
             msg = str(e)
             if "429" in msg:
