@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2025-12-30T21:09:53.752360-05:00",
-    "display": "Last Updated: 9:09PM on 12/30"
+    "iso": "2025-12-30T21:59:16.077236-05:00",
+    "display": "Last Updated: 9:59PM on 12/30"
   },
   "split": {
     "queue": 420,
@@ -15,17 +15,17 @@
       "current": {
         "tier": "PLATINUM",
         "division": "IV",
-        "lp": 48,
+        "lp": 31,
         "wins": 13,
-        "losses": 11,
-        "games": 24,
-        "winrate": 0.5416666666666666
+        "losses": 12,
+        "games": 25,
+        "winrate": 0.52
       },
       "leagueRecord": {
         "wins": 13,
-        "losses": 11,
-        "games": 24,
-        "winrate": 0.5416666666666666
+        "losses": 12,
+        "games": 25,
+        "winrate": 0.52
       },
       "peak": {
         "tier": "PLATINUM",
@@ -45,6 +45,12 @@
           "tier": "PLATINUM",
           "division": "IV",
           "lp": 48
+        },
+        {
+          "ts": 1767149955,
+          "tier": "PLATINUM",
+          "division": "IV",
+          "lp": 31
         }
       ],
       "matchesSeen": [
@@ -71,17 +77,18 @@
         "NA1_5402775860",
         "NA1_5402922472",
         "NA1_5408169752",
-        "NA1_5451483551"
+        "NA1_5451483551",
+        "NA1_5451513719"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 24,
+        "splitMatchesProcessed": 25,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 45970,
-        "totalPlaytimeHMS": "12:46:10",
-        "games": 24,
+        "totalPlaytimeSeconds": 47735,
+        "totalPlaytimeHMS": "13:15:35",
+        "games": 25,
         "wins": 13,
-        "losses": 11,
+        "losses": 12,
         "champions": {
           "35": {
             "games": 19,
@@ -96,10 +103,10 @@
             "playtimeSeconds": 3311
           },
           "142": {
-            "games": 2,
+            "games": 3,
             "wins": 0,
-            "losses": 2,
-            "playtimeSeconds": 3287
+            "losses": 3,
+            "playtimeSeconds": 5052
           },
           "63": {
             "games": 1,
@@ -118,6 +125,7 @@
         "lpDelta": {
           "wins": [],
           "losses": [
+            17,
             17
           ]
         }
