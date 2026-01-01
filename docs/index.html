@@ -226,9 +226,12 @@
       border: 1px solid rgba(255,255,255,0.10);
       overflow:hidden;
       position:relative;
+
+      /* default slots; each bar overrides via inline style */
+      --slots: 4;
     }
 
-    /* segmented ticks inside the bar (5 milestones => 5 slots visually) */
+    /* segmented ticks inside the bar (dynamic via --slots) */
     .track::before{
       content:"";
       position:absolute;
@@ -237,9 +240,9 @@
         repeating-linear-gradient(
           90deg,
           transparent 0,
-          transparent calc(20% - 1px),
-          rgba(255,255,255,0.10) calc(20% - 1px),
-          rgba(255,255,255,0.10) 20%
+          transparent calc((100% / var(--slots)) - 1px),
+          rgba(255,255,255,0.10) calc((100% / var(--slots)) - 1px),
+          rgba(255,255,255,0.10) calc(100% / var(--slots))
         );
       opacity:0.65;
       pointer-events:none;
@@ -488,11 +491,10 @@
       start: { tier: "SILVER", div: "IV", lp: 0 },
       end:   { tier: "GOLD",   div: "IV", lp: 0 },
       milestones: [
-        { tier: "SILVER", div:"IV", label:"S4" },
+        { tier: "SILVER", div:"IV",  label:"S4" },
         { tier: "SILVER", div:"III", label:"S3" },
-        { tier: "SILVER", div:"II", label:"S2" },
-        { tier: "SILVER", div:"I", label:"S1" },
-        { tier: "GOLD",   div:"IV", label:"G4" },
+        { tier: "SILVER", div:"II",  label:"S2" },
+        { tier: "SILVER", div:"I",   label:"S1" }
       ]
     },
     {
@@ -500,11 +502,10 @@
       start: { tier: "GOLD", div: "IV", lp: 0 },
       end:   { tier: "PLATINUM", div: "IV", lp: 0 },
       milestones: [
-        { tier: "GOLD", div:"IV", label:"G4" },
+        { tier: "GOLD", div:"IV",  label:"G4" },
         { tier: "GOLD", div:"III", label:"G3" },
-        { tier: "GOLD", div:"II", label:"G2" },
-        { tier: "GOLD", div:"I", label:"G1" },
-        { tier: "PLATINUM", div:"IV", label:"P4" },
+        { tier: "GOLD", div:"II",  label:"G2" },
+        { tier: "GOLD", div:"I",   label:"G1" }
       ]
     },
     {
@@ -512,11 +513,10 @@
       start: { tier: "PLATINUM", div: "IV", lp: 0 },
       end:   { tier: "EMERALD",  div: "IV", lp: 0 },
       milestones: [
-        { tier: "PLATINUM", div:"IV", label:"P4" },
+        { tier: "PLATINUM", div:"IV",  label:"P4" },
         { tier: "PLATINUM", div:"III", label:"P3" },
-        { tier: "PLATINUM", div:"II", label:"P2" },
-        { tier: "PLATINUM", div:"I", label:"P1" },
-        { tier: "EMERALD",  div:"IV", label:"E4" },
+        { tier: "PLATINUM", div:"II",  label:"P2" },
+        { tier: "PLATINUM", div:"I",   label:"P1" }
       ]
     },
   ];
@@ -590,7 +590,9 @@
               <div class="t">${bar.title}</div>
               <div class="pct">${pctLabel}</div>
             </div>
-            <div class="track"><div class="fill" style="width:${(prog.pct*100).toFixed(2)}%"></div></div>
+            <div class="track" style="--slots:${bar.milestones.length}">
+              <div class="fill" style="width:${(prog.pct*100).toFixed(2)}%"></div>
+            </div>
             <div class="milestones">${milestoneHtml}</div>
           </div>
         `;
