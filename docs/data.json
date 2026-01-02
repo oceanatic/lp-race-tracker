@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-01-02T00:18:25.989043-05:00",
-    "display": "Last Updated: 12:18AM on 1/2"
+    "iso": "2026-01-02T00:45:28.980825-05:00",
+    "display": "Last Updated: 12:45AM on 1/2"
   },
   "split": {
     "queue": 420,
@@ -591,17 +591,18 @@
         "NA1_5406392186",
         "NA1_5407214420",
         "NA1_5407231943",
-        "NA1_5453401663"
+        "NA1_5453401663",
+        "NA1_5453450899"
       ],
       "stats": {
         "splitMatchIdsFound": null,
-        "splitMatchesProcessed": 404,
+        "splitMatchesProcessed": 405,
         "splitBackfillRemaining": null,
-        "totalPlaytimeSeconds": 969994,
-        "totalPlaytimeHMS": "269:26:34",
-        "games": 404,
+        "totalPlaytimeSeconds": 970125,
+        "totalPlaytimeHMS": "269:28:45",
+        "games": 405,
         "wins": 208,
-        "losses": 196,
+        "losses": 197,
         "champions": {
           "60": {
             "games": 26,
@@ -652,10 +653,10 @@
             "playtimeSeconds": 12988
           },
           "32": {
-            "games": 7,
+            "games": 8,
             "wins": 4,
-            "losses": 3,
-            "playtimeSeconds": 11917
+            "losses": 4,
+            "playtimeSeconds": 12048
           },
           "80": {
             "games": 11,
@@ -856,12 +857,14 @@
         "highestWinrateChampionWR": 0.8181818181818182,
         "lowestWinrateChampionWR": 0.2,
         "avgLpGainPerWin": 24.0,
-        "avgLpLossPerLoss": null,
+        "avgLpLossPerLoss": 24.0,
         "lpDelta": {
           "wins": [
             24
           ],
-          "losses": []
+          "losses": [
+            24
+          ]
         }
       },
       "backfill": {
