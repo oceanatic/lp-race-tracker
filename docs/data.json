@@ -1,46 +1,35 @@
 {
   "updatedAt": {
     "iso": "2026-01-08T10:26:43.804795-05:00",
-    "display": "Last Updated: 10:26AM on 1/8"
+    "display": "Season Reset: 10:26AM on 1/8"
   },
   "split": {
     "queue": 420,
     "queueType": "RANKED_SOLO_5x5",
-    "startUnix": 1767875204
+    "startUnix": 1767875204,
+    "seasonStatus": "NEW_SEASON_RESET"
   },
   "players": {
     "mentallyunhinged": {
       "riotId": "mentallyunhinged#0626",
       "puuid": "RqmR6rH7eXPq0tdd0qilJXojjT-MHxN34j5OcbDR7c-uhd67PG1nfMeWgmDEx9bHif8zkvVQxMeV3Q",
       "current": {
-        "tier": "PLATINUM",
-        "division": "IV",
-        "lp": 63,
-        "wins": 14,
-        "losses": 12,
-        "games": 26,
-        "winrate": 0.5384615384615384
+        "tier": "PROVISIONAL",
+        "division": null,
+        "lp": 0,
+        "wins": 0,
+        "losses": 0,
+        "games": 0,
+        "winrate": null
       },
       "leagueRecord": {
-        "wins": 14,
-        "losses": 12,
-        "games": 26,
-        "winrate": 0.5384615384615384
+        "wins": 0,
+        "losses": 0,
+        "games": 0,
+        "winrate": null
       },
-      "peak": {
-        "tier": "PLATINUM",
-        "division": "IV",
-        "lp": 63,
-        "ts": 1767885294
-      },
-      "lpHistory": [
-        {
-          "ts": 1767885294,
-          "tier": "PLATINUM",
-          "division": "IV",
-          "lp": 63
-        }
-      ],
+      "peak": null,
+      "lpHistory": [],
       "matchesSeen": [],
       "pendingMatchIds": [],
       "backfill": {
@@ -48,9 +37,9 @@
         "done": true
       },
       "stats": {
-        "splitMatchIdsFound": null,
+        "splitMatchIdsFound": 0,
         "splitMatchesProcessed": 0,
-        "splitBackfillRemaining": null,
+        "splitBackfillRemaining": 0,
         "totalPlaytimeSeconds": 0,
         "totalPlaytimeHMS": "0:00:00",
         "games": 0,
@@ -75,34 +64,22 @@
       "riotId": "mikebeastem#MRD",
       "puuid": "gDf4zLF1Fxp9LRydomCqjsogTYA8VnLAga2wZAXEW3OYtw1ciL1v0R15e1-we-5D8TrhtggKk9kzhA",
       "current": {
-        "tier": "PLATINUM",
-        "division": "IV",
-        "lp": 30,
-        "wins": 292,
-        "losses": 261,
-        "games": 553,
-        "winrate": 0.5280289330922242
+        "tier": "PROVISIONAL",
+        "division": null,
+        "lp": 0,
+        "wins": 0,
+        "losses": 0,
+        "games": 0,
+        "winrate": null
       },
       "leagueRecord": {
-        "wins": 292,
-        "losses": 261,
-        "games": 553,
-        "winrate": 0.5280289330922242
+        "wins": 0,
+        "losses": 0,
+        "games": 0,
+        "winrate": null
       },
-      "peak": {
-        "tier": "PLATINUM",
-        "division": "IV",
-        "lp": 30,
-        "ts": 1767885295
-      },
-      "lpHistory": [
-        {
-          "ts": 1767885295,
-          "tier": "PLATINUM",
-          "division": "IV",
-          "lp": 30
-        }
-      ],
+      "peak": null,
+      "lpHistory": [],
       "matchesSeen": [],
       "pendingMatchIds": [],
       "backfill": {
@@ -110,9 +87,9 @@
         "done": true
       },
       "stats": {
-        "splitMatchIdsFound": null,
+        "splitMatchIdsFound": 0,
         "splitMatchesProcessed": 0,
-        "splitBackfillRemaining": null,
+        "splitBackfillRemaining": 0,
         "totalPlaytimeSeconds": 0,
         "totalPlaytimeHMS": "0:00:00",
         "games": 0,
