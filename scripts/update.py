@@ -20,7 +20,7 @@ QUEUE_TYPE_SOLO = "RANKED_SOLO_5x5"
 OUT_PATH = "docs/data.json"
 
 # Split tracking start: January 9, 2025 00:00 UTC
-SPLIT_START_UNIX = 1736380800
+SPLIT_START_UNIX = 1767875204
 
 # Match-v5 paging + rate safety
 MATCH_PAGE_SIZE = 100                 # match-v5 max per request
