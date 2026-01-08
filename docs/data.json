@@ -1,0 +1,135 @@
+{
+  "updatedAt": {
+    "iso": "2026-01-08T07:34:32.127615-05:00",
+    "display": "Last Updated: 7:34AM on 1/8"
+  },
+  "split": {
+    "queue": 420,
+    "queueType": "RANKED_SOLO_5x5",
+    "startUnix": 1767875204
+  },
+  "players": {
+    "mentallyunhinged": {
+      "riotId": "mentallyunhinged#0626",
+      "puuid": "RqmR6rH7eXPq0tdd0qilJXojjT-MHxN34j5OcbDR7c-uhd67PG1nfMeWgmDEx9bHif8zkvVQxMeV3Q",
+      "current": {
+        "tier": "PLATINUM",
+        "division": "IV",
+        "lp": 63,
+        "wins": 14,
+        "losses": 12,
+        "games": 26,
+        "winrate": 0.5384615384615384
+      },
+      "leagueRecord": {
+        "wins": 14,
+        "losses": 12,
+        "games": 26,
+        "winrate": 0.5384615384615384
+      },
+      "peak": {
+        "tier": "PLATINUM",
+        "division": "IV",
+        "lp": 63,
+        "ts": 1767875671
+      },
+      "lpHistory": [
+        {
+          "ts": 1767875671,
+          "tier": "PLATINUM",
+          "division": "IV",
+          "lp": 63
+        }
+      ],
+      "matchesSeen": [],
+      "pendingMatchIds": [],
+      "backfill": {
+        "nextStart": 0,
+        "done": true
+      },
+      "stats": {
+        "splitMatchIdsFound": null,
+        "splitMatchesProcessed": 0,
+        "splitBackfillRemaining": null,
+        "totalPlaytimeSeconds": 0,
+        "totalPlaytimeHMS": "0:00:00",
+        "games": 0,
+        "wins": 0,
+        "losses": 0,
+        "champions": {},
+        "mostPlayedChampionId": null,
+        "highestWinrateChampionId": null,
+        "lowestWinrateChampionId": null,
+        "highestWinrateChampionWR": null,
+        "lowestWinrateChampionWR": null,
+        "avgLpGainPerWin": null,
+        "avgLpLossPerLoss": null,
+        "lpDelta": {
+          "wins": [],
+          "losses": []
+        }
+      }
+    },
+    "mikebeastem": {
+      "riotId": "mikebeastem#MRD",
+      "puuid": "gDf4zLF1Fxp9LRydomCqjsogTYA8VnLAga2wZAXEW3OYtw1ciL1v0R15e1-we-5D8TrhtggKk9kzhA",
+      "current": {
+        "tier": "PLATINUM",
+        "division": "IV",
+        "lp": 30,
+        "wins": 292,
+        "losses": 261,
+        "games": 553,
+        "winrate": 0.5280289330922242
+      },
+      "leagueRecord": {
+        "wins": 292,
+        "losses": 261,
+        "games": 553,
+        "winrate": 0.5280289330922242
+      },
+      "peak": {
+        "tier": "PLATINUM",
+        "division": "IV",
+        "lp": 30,
+        "ts": 1767875671
+      },
+      "lpHistory": [
+        {
+          "ts": 1767875671,
+          "tier": "PLATINUM",
+          "division": "IV",
+          "lp": 30
+        }
+      ],
+      "matchesSeen": [],
+      "pendingMatchIds": [],
+      "backfill": {
+        "nextStart": 0,
+        "done": true
+      },
+      "stats": {
+        "splitMatchIdsFound": null,
+        "splitMatchesProcessed": 0,
+        "splitBackfillRemaining": null,
+        "totalPlaytimeSeconds": 0,
+        "totalPlaytimeHMS": "0:00:00",
+        "games": 0,
+        "wins": 0,
+        "losses": 0,
+        "champions": {},
+        "mostPlayedChampionId": null,
+        "highestWinrateChampionId": null,
+        "lowestWinrateChampionId": null,
+        "highestWinrateChampionWR": null,
+        "lowestWinrateChampionWR": null,
+        "avgLpGainPerWin": null,
+        "avgLpLossPerLoss": null,
+        "lpDelta": {
+          "wins": [],
+          "losses": []
+        }
+      }
+    }
+  }
+}
