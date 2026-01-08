@@ -19,7 +19,7 @@ QUEUE_TYPE_SOLO = "RANKED_SOLO_5x5"
 
 OUT_PATH = "docs/data.json"
 
-# Split tracking start: January 9, 2025 00:00 UTC
+# Split tracking start (UTC unix seconds). You set this to "now" for a new custom split.
 SPLIT_START_UNIX = 1767875204
 
 # Match-v5 paging + rate safety
@@ -60,7 +60,6 @@ def riot_get(url, params=None, max_retries=6):
             continue
 
         # Hard failure: wrong key, forbidden, bad request, etc.
-        # Helpful diagnostics in CI logs:
         try:
             body_preview = (r.text or "")[:300]
         except Exception:
@@ -154,12 +153,15 @@ def update_player(state, p):
     platform = p["platform"]
     regional = p["regional"]
 
+    # Use the split start stored in state (authoritative for this run)
+    split_start_unix = int(state.get("split", {}).get("startUnix", SPLIT_START_UNIX))
+
     players = state.setdefault("players", {})
     st = players.setdefault(label, {
         "riotId": f'{p["gameName"]}#{p["tagLine"]}',
         "puuid": None,
 
-        # League (authoritative ladder state)
+        # League (authoritative ladder state; season totals)
         "current": None,
         "leagueRecord": None,
 
@@ -167,7 +169,7 @@ def update_player(state, p):
         "peak": None,
         "lpHistory": [],
 
-        # Match-derived split stats (incremental)
+        # Match-derived split stats (incremental; since split_start_unix)
         "matchesSeen": [],
 
         # Persistent queue of match IDs we discovered but haven't processed yet
@@ -187,6 +189,7 @@ def update_player(state, p):
             "totalPlaytimeSeconds": 0,
             "totalPlaytimeHMS": "0:00:00",
             "games": 0, "wins": 0, "losses": 0,
+            "winrate": None,  # split winrate
 
             "champions": {},
             "mostPlayedChampionId": None,
@@ -204,12 +207,14 @@ def update_player(state, p):
     # Ensure older saved states have new fields
     st.setdefault("backfill", {"nextStart": 0, "done": False})
     st.setdefault("pendingMatchIds", [])
+    st.setdefault("stats", {})
+    st["stats"].setdefault("winrate", None)
 
     # Resolve PUUID
     if not st["puuid"]:
         st["puuid"] = get_puuid(p["gameName"], p["tagLine"], regional)
 
-    # Current rank snapshot (Solo/Duo)
+    # Current rank snapshot (Solo/Duo) - season totals
     entries = get_league_entries_by_puuid(st["puuid"], platform)
     if not isinstance(entries, list):
         raise RuntimeError(f"League entries lookup failed: {entries}")
@@ -219,7 +224,6 @@ def update_player(state, p):
     now_ts = int(time.time())
     snap = {"ts": now_ts}
 
-    # Keep these defined for logging even if unranked
     lwins = llosses = lgames = None
 
     if solo:
@@ -248,7 +252,6 @@ def update_player(state, p):
         if (not last) or (last.get("tier"), last.get("division"), last.get("lp")) != (snap["tier"], snap["division"], snap["lp"]):
             st["lpHistory"].append(snap)
 
-        # Peak rank/LP since tracking began
         cur_val = rank_value(snap["tier"], snap["division"], snap["lp"])
         peak = st.get("peak")
         if (not peak) or cur_val > rank_value(peak["tier"], peak["division"], peak["lp"]):
@@ -265,21 +268,17 @@ def update_player(state, p):
     seen = set(st["matchesSeen"])
     backfill = st["backfill"]
 
-    # Pending queue helpers
     pending = st["pendingMatchIds"]
     pending_set = set(pending)
 
-    # -----------------------------
-    # Backfill + realtime pipeline
-    # -----------------------------
     recent_ids = None  # for logging only
 
-    # 1) Backfill: scan pages and enqueue unseen IDs (do NOT rely on immediate processing)
+    # 1) Backfill: scan pages and enqueue unseen IDs
     pages_scanned = 0
     if not backfill.get("done", False):
         while pages_scanned < BACKFILL_PAGES_PER_RUN:
             start = int(backfill.get("nextStart", 0))
-            ids = get_match_ids(st["puuid"], regional, start=start, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
+            ids = get_match_ids(st["puuid"], regional, start=start, count=MATCH_PAGE_SIZE, start_time=split_start_unix)
             if not isinstance(ids, list):
                 raise RuntimeError(f"Match ID lookup failed: {ids}")
 
@@ -289,24 +288,20 @@ def update_player(state, p):
                 backfill["done"] = True
                 break
 
-            # Optional optimization: if we hit anything we've already processed, we're overlapping
             intersects_seen = any(mid in seen for mid in ids)
 
-            # Enqueue any not already seen/pending
             for mid in ids:
                 if mid not in seen and mid not in pending_set:
                     pending.append(mid)
                     pending_set.add(mid)
 
-            # Advance cursor
             backfill["nextStart"] = start + MATCH_PAGE_SIZE
 
-            # If optimization enabled, stop scanning when overlap is detected to save requests.
             if STOP_BACKFILL_ON_FIRST_SEEN and intersects_seen:
                 break
 
-    # 2) Realtime: even if backfill is done, always check newest page and enqueue new matches
-    recent_ids = get_match_ids(st["puuid"], regional, start=0, count=MATCH_PAGE_SIZE, start_time=SPLIT_START_UNIX)
+    # 2) Realtime: always check newest page and enqueue new matches
+    recent_ids = get_match_ids(st["puuid"], regional, start=0, count=MATCH_PAGE_SIZE, start_time=split_start_unix)
     if not isinstance(recent_ids, list):
         raise RuntimeError(f"Match ID lookup failed: {recent_ids}")
 
@@ -320,7 +315,7 @@ def update_player(state, p):
     # 3) Process from pending, oldest->newest, capped
     to_process = []
     while pending and len(to_process) < MAX_MATCH_DETAILS_PER_RUN:
-        to_process.append(pending.pop())  # oldest-ish
+        to_process.append(pending.pop())
         pending_set.discard(to_process[-1])
 
     rate_limit_hits = 0
@@ -335,14 +330,12 @@ def update_player(state, p):
                 rate_limit_hits += 1
                 if rate_limit_hits >= RATE_LIMIT_HIT_LIMIT:
                     print("Too many 429s; stopping early this run to stay stable.")
-                    # Put unprocessed IDs back into pending so we don't lose them
                     for back_mid in reversed(to_process[to_process.index(mid):]):
                         if back_mid not in seen and back_mid not in pending_set:
                             pending.append(back_mid)
                             pending_set.add(back_mid)
                     break
             print(f"Skipping match due to HTTPError: {mid} -> {e}")
-            # Put it back so we can retry next run
             if mid not in seen and mid not in pending_set:
                 pending.append(mid)
                 pending_set.add(mid)
@@ -352,7 +345,6 @@ def update_player(state, p):
         participants = info.get("participants", [])
         me = next((x for x in participants if x.get("puuid") == st["puuid"]), None)
         if not me:
-            # Put back; something is off, but don't drop it
             if mid not in seen and mid not in pending_set:
                 pending.append(mid)
                 pending_set.add(mid)
@@ -385,9 +377,12 @@ def update_player(state, p):
         seen.add(mid)
         new_match_results.append((mid, win))
 
-    # We know what we've processed; this is "match-details processed", not "total split games".
+    # Post-processing / derived split stats
     stats["splitMatchesProcessed"] = len(st["matchesSeen"])
     stats["totalPlaytimeHMS"] = seconds_to_hms(stats["totalPlaytimeSeconds"])
+
+    split_games = stats["games"]
+    stats["winrate"] = (stats["wins"] / split_games) if split_games else None
 
     # Derived champ stats
     champs = stats["champions"]
@@ -405,8 +400,8 @@ def update_player(state, p):
     eligible = [r for r in champ_rows if r[1] >= MIN_GAMES_FOR_BEST_WORST and r[3] is not None]
 
     if len(eligible) >= 2:
-        best = max(eligible, key=lambda r: (r[3], r[1]))      # higher WR, then more games
-        worst = min(eligible, key=lambda r: (r[3], -r[1]))    # lower WR, then more games
+        best = max(eligible, key=lambda r: (r[3], r[1]))
+        worst = min(eligible, key=lambda r: (r[3], -r[1]))
         stats["highestWinrateChampionId"] = best[0]
         stats["lowestWinrateChampionId"] = worst[0]
         stats["highestWinrateChampionWR"] = best[3]
@@ -423,7 +418,7 @@ def update_player(state, p):
         stats["highestWinrateChampionWR"] = None
         stats["lowestWinrateChampionWR"] = None
 
-    # LP gain/loss best-effort attribution:
+    # LP gain/loss best-effort attribution
     if lp_delta is not None and len(new_match_results) == 1:
         _, w = new_match_results[0]
         if w:
@@ -440,7 +435,9 @@ def update_player(state, p):
     newest = recent_ids[0] if recent_ids else None
     newest_is_seen = (recent_ids and (recent_ids[0] in set(st["matchesSeen"])))
 
+    print(f"[{label}] split_start_utc={datetime.fromtimestamp(split_start_unix, tz=timezone.utc).isoformat()}")
     print(f"[{label}] SOLO ladder games now={lgames if solo else 'n/a'} W={lwins if solo else 'n/a'} L={llosses if solo else 'n/a'}")
+    print(f"[{label}] split_games={stats['games']} split_W={stats['wins']} split_L={stats['losses']} split_WR={stats['winrate']}")
     print(f"[{label}] seen_total={len(st['matchesSeen'])} new_details_processed_this_run={len(new_match_results)}")
     print(f"[{label}] pending={len(st['pendingMatchIds'])} backfill_done={backfill.get('done')} nextStart={backfill.get('nextStart')} pages_scanned={pages_scanned}")
     print(f"[{label}] fetched_ids={len(recent_ids) if recent_ids is not None else 'n/a'} newest={newest} newest_is_seen={newest_is_seen}")
