@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-01-08T10:50:00.634122-05:00",
-    "display": "Last Updated: 10:50AM on 1/8"
+    "iso": "2026-01-08T11:06:02.100649-05:00",
+    "display": "Last Updated: 11:06AM on 1/8"
   },
   "split": {
     "queue": 420,
@@ -13,10 +13,35 @@
     "mentallyunhinged": {
       "riotId": "mentallyunhinged#0626",
       "puuid": "RqmR6rH7eXPq0tdd0qilJXojjT-MHxN34j5OcbDR7c-uhd67PG1nfMeWgmDEx9bHif8zkvVQxMeV3Q",
-      "current": null,
-      "leagueRecord": null,
-      "peak": null,
-      "lpHistory": [],
+      "current": {
+        "tier": "PLATINUM",
+        "division": "IV",
+        "lp": 63,
+        "wins": 14,
+        "losses": 12,
+        "games": 26,
+        "winrate": 0.5384615384615384
+      },
+      "leagueRecord": {
+        "wins": 14,
+        "losses": 12,
+        "games": 26,
+        "winrate": 0.5384615384615384
+      },
+      "peak": {
+        "tier": "PLATINUM",
+        "division": "IV",
+        "lp": 63,
+        "ts": 1767888361
+      },
+      "lpHistory": [
+        {
+          "ts": 1767888361,
+          "tier": "PLATINUM",
+          "division": "IV",
+          "lp": 63
+        }
+      ],
       "matchesSeen": [],
       "pendingMatchIds": [],
       "backfill": {
@@ -50,10 +75,35 @@
     "mikebeastem": {
       "riotId": "mikebeastem#MRD",
       "puuid": "gDf4zLF1Fxp9LRydomCqjsogTYA8VnLAga2wZAXEW3OYtw1ciL1v0R15e1-we-5D8TrhtggKk9kzhA",
-      "current": null,
-      "leagueRecord": null,
-      "peak": null,
-      "lpHistory": [],
+      "current": {
+        "tier": "PLATINUM",
+        "division": "IV",
+        "lp": 30,
+        "wins": 292,
+        "losses": 261,
+        "games": 553,
+        "winrate": 0.5280289330922242
+      },
+      "leagueRecord": {
+        "wins": 292,
+        "losses": 261,
+        "games": 553,
+        "winrate": 0.5280289330922242
+      },
+      "peak": {
+        "tier": "PLATINUM",
+        "division": "IV",
+        "lp": 30,
+        "ts": 1767888362
+      },
+      "lpHistory": [
+        {
+          "ts": 1767888362,
+          "tier": "PLATINUM",
+          "division": "IV",
+          "lp": 30
+        }
+      ],
       "matchesSeen": [],
       "pendingMatchIds": [],
       "backfill": {
