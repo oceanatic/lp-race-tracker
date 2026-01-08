@@ -16,17 +16,17 @@
       "current": null,
       "leagueRecord": null,
       "peak": {
-        "tier": "PLATINUM",
-        "division": "IV",
-        "lp": 63,
+        "tier": "N/A",
+        "division": "N/A",
+        "lp": "N/A",
         "ts": 1767888361
       },
       "lpHistory": [
         {
           "ts": 1767888361,
-          "tier": "PLATINUM",
-          "division": "IV",
-          "lp": 63
+          "tier": "N/A",
+          "division": "N/A",
+          "lp": N/A
         }
       ],
       "matchesSeen": [],
@@ -65,16 +65,16 @@
       "current": null,
       "leagueRecord": null,
       "peak": {
-        "tier": "PLATINUM",
-        "division": "IV",
-        "lp": 30,
+        "tier": "N/A",
+        "division": "N/A",
+        "lp": N/A,
         "ts": 1767888362
       },
       "lpHistory": [
         {
           "ts": 1767888362,
-          "tier": "PLATINUM",
-          "division": "IV",
+          "tier": "N/A",
+          "division": "N/A",
           "lp": 30
         }
       ],
