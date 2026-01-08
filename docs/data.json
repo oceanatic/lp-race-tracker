@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-01-08T14:58:26.373611-05:00",
-    "display": "Last Updated: 2:58PM on 1/8"
+    "iso": "2026-01-08T15:31:30.889930-05:00",
+    "display": "Last Updated: 3:31PM on 1/8"
   },
   "split": {
     "queue": 420,
@@ -13,21 +13,8 @@
     "mentallyunhinged": {
       "riotId": "mentallyunhinged#0626",
       "puuid": "RqmR6rH7eXPq0tdd0qilJXojjT-MHxN34j5OcbDR7c-uhd67PG1nfMeWgmDEx9bHif8zkvVQxMeV3Q",
-      "current": {
-        "tier": "PLATINUM",
-        "division": "IV",
-        "lp": 63,
-        "wins": 14,
-        "losses": 12,
-        "games": 26,
-        "winrate": 0.5384615384615384
-      },
-      "leagueRecord": {
-        "wins": 14,
-        "losses": 12,
-        "games": 26,
-        "winrate": 0.5384615384615384
-      },
+      "current": null,
+      "leagueRecord": null,
       "peak": {
         "tier": "PLATINUM",
         "division": "IV",
@@ -75,21 +62,8 @@
     "mikebeastem": {
       "riotId": "mikebeastem#MRD",
       "puuid": "gDf4zLF1Fxp9LRydomCqjsogTYA8VnLAga2wZAXEW3OYtw1ciL1v0R15e1-we-5D8TrhtggKk9kzhA",
-      "current": {
-        "tier": "PLATINUM",
-        "division": "IV",
-        "lp": 30,
-        "wins": 292,
-        "losses": 261,
-        "games": 553,
-        "winrate": 0.5280289330922242
-      },
-      "leagueRecord": {
-        "wins": 292,
-        "losses": 261,
-        "games": 553,
-        "winrate": 0.5280289330922242
-      },
+      "current": null,
+      "leagueRecord": null,
       "peak": {
         "tier": "PLATINUM",
         "division": "IV",
