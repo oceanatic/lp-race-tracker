@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-01-09T02:33:52.848224-05:00",
-    "display": "Last Updated: 2:33AM on 1/9"
+    "iso": "2026-01-09T02:48:38.531321-05:00",
+    "display": "Last Updated: 2:48AM on 1/9"
   },
   "split": {
     "queue": 420,
@@ -65,17 +65,17 @@
       "current": {
         "tier": "GOLD",
         "division": "IV",
-        "lp": 75,
+        "lp": 65,
         "wins": 4,
-        "losses": 3,
-        "games": 7,
-        "winrate": 0.5714285714285714
+        "losses": 4,
+        "games": 8,
+        "winrate": 0.5
       },
       "leagueRecord": {
         "wins": 4,
-        "losses": 3,
-        "games": 7,
-        "winrate": 0.5714285714285714
+        "losses": 4,
+        "games": 8,
+        "winrate": 0.5
       },
       "peak": {
         "tier": "PLATINUM",
@@ -107,6 +107,12 @@
           "tier": "GOLD",
           "division": "IV",
           "lp": 75
+        },
+        {
+          "ts": 1767944918,
+          "tier": "GOLD",
+          "division": "IV",
+          "lp": 65
         }
       ],
       "matchesSeen": [],
