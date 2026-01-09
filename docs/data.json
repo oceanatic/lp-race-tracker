@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-01-09T00:16:00.578603-05:00",
-    "display": "Last Updated: 12:16AM on 1/9"
+    "iso": "2026-01-09T00:44:29.468566-05:00",
+    "display": "Last Updated: 12:44AM on 1/9"
   },
   "split": {
     "queue": 420,
@@ -62,8 +62,21 @@
     "mikebeastem": {
       "riotId": "mikebeastem#MRD",
       "puuid": "gDf4zLF1Fxp9LRydomCqjsogTYA8VnLAga2wZAXEW3OYtw1ciL1v0R15e1-we-5D8TrhtggKk9kzhA",
-      "current": null,
-      "leagueRecord": null,
+      "current": {
+        "tier": "GOLD",
+        "division": "IV",
+        "lp": 55,
+        "wins": 3,
+        "losses": 2,
+        "games": 5,
+        "winrate": 0.6
+      },
+      "leagueRecord": {
+        "wins": 3,
+        "losses": 2,
+        "games": 5,
+        "winrate": 0.6
+      },
       "peak": {
         "tier": "PLATINUM",
         "division": "IV",
@@ -76,6 +89,12 @@
           "tier": "PLATINUM",
           "division": "IV",
           "lp": 30
+        },
+        {
+          "ts": 1767937469,
+          "tier": "GOLD",
+          "division": "IV",
+          "lp": 55
         }
       ],
       "matchesSeen": [],
