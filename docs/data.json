@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-01-09T11:29:55.549761-05:00",
-    "display": "Last Updated: 11:29AM on 1/9"
+    "iso": "2026-01-09T11:56:23.869041-05:00",
+    "display": "Last Updated: 11:56AM on 1/9"
   },
   "split": {
     "queue": 420,
@@ -29,7 +29,9 @@
           "lp": 63
         }
       ],
-      "matchesSeen": [],
+      "matchesSeen": [
+        "NA1_5459580333"
+      ],
       "pendingMatchIds": [],
       "backfill": {
         "nextStart": 0,
@@ -37,16 +39,23 @@
       },
       "stats": {
         "splitMatchIdsFound": 0,
-        "splitMatchesProcessed": 0,
+        "splitMatchesProcessed": 1,
         "splitBackfillRemaining": 0,
-        "totalPlaytimeSeconds": 0,
-        "totalPlaytimeHMS": "0:00:00",
-        "games": 0,
+        "totalPlaytimeSeconds": 1006,
+        "totalPlaytimeHMS": "0:16:46",
+        "games": 1,
         "wins": 0,
-        "losses": 0,
+        "losses": 1,
         "winrate": null,
-        "champions": {},
-        "mostPlayedChampionId": null,
+        "champions": {
+          "142": {
+            "games": 1,
+            "wins": 0,
+            "losses": 1,
+            "playtimeSeconds": 1006
+          }
+        },
+        "mostPlayedChampionId": "142",
         "highestWinrateChampionId": null,
         "lowestWinrateChampionId": null,
         "highestWinrateChampionWR": null,
