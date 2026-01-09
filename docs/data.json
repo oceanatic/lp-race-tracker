@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-01-09T12:56:31.518398-05:00",
-    "display": "Last Updated: 12:56PM on 1/9"
+    "iso": "2026-01-09T13:33:32.030279-05:00",
+    "display": "Last Updated: 1:33PM on 1/9"
   },
   "split": {
     "queue": 420,
@@ -31,7 +31,8 @@
       ],
       "matchesSeen": [
         "NA1_5459580333",
-        "NA1_5459589467"
+        "NA1_5459589467",
+        "NA1_5459611154"
       ],
       "pendingMatchIds": [],
       "backfill": {
@@ -40,20 +41,20 @@
       },
       "stats": {
         "splitMatchIdsFound": 0,
-        "splitMatchesProcessed": 2,
+        "splitMatchesProcessed": 3,
         "splitBackfillRemaining": 0,
-        "totalPlaytimeSeconds": 3526,
-        "totalPlaytimeHMS": "0:58:46",
-        "games": 2,
+        "totalPlaytimeSeconds": 5327,
+        "totalPlaytimeHMS": "1:28:47",
+        "games": 3,
         "wins": 1,
-        "losses": 1,
+        "losses": 2,
         "winrate": null,
         "champions": {
           "142": {
-            "games": 1,
+            "games": 2,
             "wins": 0,
-            "losses": 1,
-            "playtimeSeconds": 1006
+            "losses": 2,
+            "playtimeSeconds": 2807
           },
           "63": {
             "games": 1,
