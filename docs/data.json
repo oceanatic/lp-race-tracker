@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-01-16T01:00:08.217330-05:00",
-    "display": "Last Updated: 1:00AM on 1/16"
+    "iso": "2026-01-16T01:47:39.457405-05:00",
+    "display": "Last Updated: 1:47AM on 1/16"
   },
   "split": {
     "queue": 420,
@@ -119,17 +119,17 @@
       "current": {
         "tier": "GOLD",
         "division": "II",
-        "lp": 87,
-        "wins": 19,
-        "losses": 25,
-        "games": 44,
-        "winrate": 0.4318181818181818
+        "lp": 99,
+        "wins": 20,
+        "losses": 26,
+        "games": 46,
+        "winrate": 0.43478260869565216
       },
       "leagueRecord": {
-        "wins": 19,
-        "losses": 25,
-        "games": 44,
-        "winrate": 0.4318181818181818
+        "wins": 20,
+        "losses": 26,
+        "games": 46,
+        "winrate": 0.43478260869565216
       },
       "peak": {
         "tier": "PLATINUM",
@@ -353,6 +353,12 @@
           "tier": "GOLD",
           "division": "II",
           "lp": 87
+        },
+        {
+          "ts": 1768546058,
+          "tier": "GOLD",
+          "division": "II",
+          "lp": 99
         }
       ],
       "matchesSeen": [
@@ -400,7 +406,9 @@
         "NA1_5465351900",
         "NA1_5465400358",
         "NA1_5465629111",
-        "NA1_5465663600"
+        "NA1_5465663600",
+        "NA1_5465749255",
+        "NA1_5465780498"
       ],
       "pendingMatchIds": [],
       "backfill": {
@@ -409,13 +417,13 @@
       },
       "stats": {
         "splitMatchIdsFound": 0,
-        "splitMatchesProcessed": 45,
+        "splitMatchesProcessed": 47,
         "splitBackfillRemaining": 0,
-        "totalPlaytimeSeconds": 81916,
-        "totalPlaytimeHMS": "22:45:16",
-        "games": 45,
-        "wins": 20,
-        "losses": 25,
+        "totalPlaytimeSeconds": 85080,
+        "totalPlaytimeHMS": "23:38:00",
+        "games": 47,
+        "wins": 21,
+        "losses": 26,
         "winrate": null,
         "champions": {
           "106": {
@@ -491,10 +499,10 @@
             "playtimeSeconds": 3774
           },
           "234": {
-            "games": 1,
-            "wins": 0,
-            "losses": 1,
-            "playtimeSeconds": 1732
+            "games": 3,
+            "wins": 1,
+            "losses": 2,
+            "playtimeSeconds": 4896
           },
           "427": {
             "games": 1,
