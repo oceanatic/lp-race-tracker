@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-02-21T19:00:40.188854-05:00",
-    "display": "Last Updated: 7:00PM on 2/21"
+    "iso": "2026-02-21T21:55:29.780550-05:00",
+    "display": "Last Updated: 9:55PM on 2/21"
   },
   "split": {
     "queue": 420,
@@ -207,17 +207,17 @@
       "current": {
         "tier": "EMERALD",
         "division": "IV",
-        "lp": 58,
+        "lp": 38,
         "wins": 83,
-        "losses": 74,
-        "games": 157,
-        "winrate": 0.5286624203821656
+        "losses": 75,
+        "games": 158,
+        "winrate": 0.5253164556962026
       },
       "leagueRecord": {
         "wins": 83,
-        "losses": 74,
-        "games": 157,
-        "winrate": 0.5286624203821656
+        "losses": 75,
+        "games": 158,
+        "winrate": 0.5253164556962026
       },
       "peak": {
         "tier": "EMERALD",
@@ -1017,6 +1017,12 @@
           "tier": "EMERALD",
           "division": "IV",
           "lp": 58
+        },
+        {
+          "ts": 1771728929,
+          "tier": "EMERALD",
+          "division": "IV",
+          "lp": 38
         }
       ],
       "matchesSeen": [
@@ -1178,7 +1184,8 @@
         "NA1_5495902208",
         "NA1_5495917363",
         "NA1_5495952964",
-        "NA1_5495986191"
+        "NA1_5495986191",
+        "NA1_5497648671"
       ],
       "pendingMatchIds": [],
       "backfill": {
@@ -1187,13 +1194,13 @@
       },
       "stats": {
         "splitMatchIdsFound": 0,
-        "splitMatchesProcessed": 159,
+        "splitMatchesProcessed": 160,
         "splitBackfillRemaining": 0,
-        "totalPlaytimeSeconds": 291405,
-        "totalPlaytimeHMS": "80:56:45",
-        "games": 159,
+        "totalPlaytimeSeconds": 293690,
+        "totalPlaytimeHMS": "81:34:50",
+        "games": 160,
         "wins": 84,
-        "losses": 75,
+        "losses": 76,
         "winrate": null,
         "champions": {
           "106": {
@@ -1269,10 +1276,10 @@
             "playtimeSeconds": 3774
           },
           "234": {
-            "games": 79,
+            "games": 80,
             "wins": 46,
-            "losses": 33,
-            "playtimeSeconds": 144240
+            "losses": 34,
+            "playtimeSeconds": 146525
           },
           "427": {
             "games": 1,
@@ -1369,9 +1376,9 @@
         "highestWinrateChampionId": "36",
         "lowestWinrateChampionId": "234",
         "highestWinrateChampionWR": 0.6363636363636364,
-        "lowestWinrateChampionWR": 0.5822784810126582,
+        "lowestWinrateChampionWR": 0.575,
         "avgLpGainPerWin": -4.62962962962963,
-        "avgLpLossPerLoss": 27.537037037037038,
+        "avgLpLossPerLoss": 27.4,
         "lpDelta": {
           "wins": [
             30,
@@ -1483,7 +1490,8 @@
             21,
             2,
             19,
-            21
+            21,
+            20
           ]
         }
       }
