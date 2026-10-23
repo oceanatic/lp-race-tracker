@@ -1,7 +1,7 @@
 {
   "updatedAt": {
-    "iso": "2026-10-22T21:57:08.989329-04:00",
-    "display": "Last Updated: 9:57PM on 10/22"
+    "iso": "2026-10-23T03:06:08.513037-04:00",
+    "display": "Last Updated: 3:06AM on 10/23"
   },
   "split": {
     "queue": 420,
@@ -550,15 +550,15 @@
         "division": "IV",
         "lp": 32,
         "wins": 240,
-        "losses": 233,
-        "games": 473,
-        "winrate": 0.507399577167019
+        "losses": 234,
+        "games": 474,
+        "winrate": 0.5063291139240507
       },
       "leagueRecord": {
         "wins": 240,
-        "losses": 233,
-        "games": 473,
-        "winrate": 0.507399577167019
+        "losses": 234,
+        "games": 474,
+        "winrate": 0.5063291139240507
       },
       "peak": {
         "tier": "EMERALD",
@@ -2968,7 +2968,8 @@
         "NA1_5659371375",
         "NA1_5661439472",
         "NA1_5663729022",
-        "NA1_5663743095"
+        "NA1_5663743095",
+        "NA1_5665484177"
       ],
       "pendingMatchIds": [],
       "backfill": {
@@ -2977,20 +2978,20 @@
       },
       "stats": {
         "splitMatchIdsFound": 0,
-        "splitMatchesProcessed": 486,
+        "splitMatchesProcessed": 487,
         "splitBackfillRemaining": 0,
-        "totalPlaytimeSeconds": 849550,
-        "totalPlaytimeHMS": "235:59:10",
-        "games": 486,
+        "totalPlaytimeSeconds": 850962,
+        "totalPlaytimeHMS": "236:22:42",
+        "games": 487,
         "wins": 247,
-        "losses": 239,
+        "losses": 240,
         "winrate": null,
         "champions": {
           "106": {
-            "games": 7,
+            "games": 8,
             "wins": 3,
-            "losses": 4,
-            "playtimeSeconds": 11692
+            "losses": 5,
+            "playtimeSeconds": 13104
           },
           "48": {
             "games": 3,
@@ -3383,7 +3384,7 @@
         "highestWinrateChampionWR": 0.625,
         "lowestWinrateChampionWR": 0.16666666666666666,
         "avgLpGainPerWin": -1.8372093023255813,
-        "avgLpLossPerLoss": 29.51063829787234,
+        "avgLpLossPerLoss": 29.242105263157896,
         "lpDelta": {
           "wins": [
             30,
@@ -3610,7 +3611,8 @@
             19,
             19,
             19,
-            36
+            36,
+            4
           ]
         }
       }
